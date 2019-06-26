@@ -7,7 +7,7 @@
 #  basis, without warranty of any kind.
 #
 # FOR-PROFIT USERS
-# If you plan to use MixMHC2pred (version 1.0) or any data provided with the script in any for-profit
+# If you plan to use MixMHC2pred (version 1.1) or any data provided with the script in any for-profit
 # application, you are required to obtain a separate license.
 # To do so, please contact eauffarth@licr.org at the Ludwig Institute for  Cancer Research Ltd.
 #
@@ -21,12 +21,12 @@
 INSTALLATION
 ############
 
-1) Download MixMHC2pred-1.0.zip file and move it to a directory
+1) Download MixMHC2pred-1.1.zip file and move it to a directory
 of your choice, where you have writing permissions.
 
-2) Unzip MixMHC2pred-1.0.zip in this directory.
+2) Unzip MixMHC2pred-1.1.zip in this directory.
 
-3) To test your installation, make sure you are in MixMHC2pred-1.0/ directory
+3) To test your installation, make sure you are in MixMHC2pred-1.1/ directory
   and run the following command, depending on your operating system:
 
   - Mac OS:   ./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01
