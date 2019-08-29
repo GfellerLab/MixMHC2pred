@@ -1,5 +1,5 @@
 ####################
-# Output from MixMHC2pred (v1.1)
+# Output from MixMHC2pred (v1.1.2)
 # Input file: test/testData.txt
 # Alleles: DRB1_11_01, DRB3_02_02, DPA1_01_03__DPB1_04_01, DQA1_05_05__DQB1_03_01
 # flat_ws: 0
@@ -7,10 +7,12 @@
 # no_Cterm: 0
 #
 # MixMHC2pred is freely available for academic users.
-# Private companies should contact eauffarth@licr.org or lfoit@licr.org at the Ludwig Institute for Cancer Research Ltd for commercial licenses.
+# Private companies should contact eauffarth@licr.org at the Ludwig Institute for Cancer Research Ltd for commercial licenses.
+# To cite MixMHC2pred, please refer to:
+# Racle, J., et al. Robust prediction of class II epitopes by deep motif deconvolution of HLA-II peptidomes. Nat. Biotech. (2019).
 #
 ####################
-Peptide	BestAllele	Score	Score_perL	BestCore	Best_s
+Peptide	BestAllele	%Rank	%Rank_perL	BestCore	Best_s
 AAAAFAGLSREEALR	DRB1_11_01	0.00486261	0.0133848	FAGLSREEA	1
 AAAAFAGLSREEALRL	DRB1_11_01	0.0513209	0.122441	FAGLSREEA	1
 AAAAFAGLSREEALRLA	DRB1_11_01	0.193858	0.311646	FAGLSREEA	0
