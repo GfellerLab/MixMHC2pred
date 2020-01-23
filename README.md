@@ -1,10 +1,13 @@
 # MixMHC2pred
 
 MixMHC2pred is a predictor of HLA class II ligands and epitopes. It is described
-in the publication (available [here](https://www.nature.com/articles/s41587-019-0289-6)):
-
+in the publication (available
+[here](https://www.nature.com/articles/s41587-019-0289-6)):  
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
-deconvolution of immunopeptidomes. *Nat. Biotech.* (2019).
+deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
+
+MixMHC2pred is also available as a web application:
+<http://mixmhc2pred.gfellerlab.org>.
 
 ## Installation
 
@@ -35,7 +38,7 @@ of your choice, where you have writing permissions.
 ### Command
 
 ```bash
-MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
+MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options] 
 ```
 
 * Depending on your operating system, use MixMHC2pred, MixMHC2pred_unix or
@@ -47,7 +50,10 @@ MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
 
 * Input file (command `-i` or `--input`):
 File listing all the peptides with one peptide per line. It can also be a fasta
-file (lines starting with ">" are skipped).
+file (lines starting with ">" are skipped). Please note that even in fasta
+format, the input should consist in a list of peptides: MixMHC2pred is not
+cutting inputted proteins into shorter fragments that could be presented but use
+the input sequences as given in the file directly.
 
 * Output file (command `-o` or `--output`):
 The name of the output file (including the directory). Peptides are kept in the
@@ -82,19 +88,25 @@ offsets).
   presented peptides, it does not output a predicted affinity value, simply a
   score.
 
-* The score is computed for each allele provided in input, and the maximal score
-  is used to determine the most likely allele (column 2 in output file).
+* Input should consist of list of peptides, likely of sizes 12-21 amino acid
+  long (shorter peptides return *nan* scores for the moment, while there is
+  only a very low probability for longer peptides to be presented on HLA-II).
+  At the moment, MixMHC2pred is not cutting longer peptides/proteins into
+  shorter fragments but use the peptides given in input as is.
 
-* The score returned (*%Rank*, column 3) corresponds to a percentile rank (best
+* The score is computed for each allele provided in input, and the maximal score
+  is used to determine the most likely allele (column *BestAllele* in output file).
+
+* The score returned (column *%Rank*) corresponds to a percentile rank (best
   score is 0, worst score is 100). This tells among random peptides, the percent
   of peptides expected to be better binders to this allele than the given
   peptide. This score is computed such that the top 1% best random peptides will
   have a length distribution following the one observed in naturally presented
   peptides.
 
-* The *%Rank_perL* (column 4) is similar but computed only between
-  peptides having the same length. This score thus doesn't follow the length
-  distribution observed in naturally presented ligands.
+* The *%Rank_perL* is similar but computed only between peptides having the same
+  length. This score thus doesn't follow the length distribution observed in
+  naturally presented ligands.
 
 * The *BestCore* and *Best_s* returned correspond to the most likely binding
   core and offset for the given peptide towards its best allele.
@@ -106,6 +118,11 @@ offsets).
 ## Latest version
 
 Latest version of MixMHC2pred is available at <https://github.com/GfellerLab/MixMHC2pred>.
+
+## Web application
+
+MixMHC2pred is also available as a web application at 
+<http://mixmhc2pred.gfellerlab.org>.
 
 ## License
 
@@ -130,4 +147,4 @@ For license-related questions, please contact Ece Auffarth
 To cite MixMHC2pred, please refer to:
 
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
-deconvolution of immunopeptidomes. *Nat. Biotech.* (2019).
+deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
