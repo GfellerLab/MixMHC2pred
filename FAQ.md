@@ -17,23 +17,30 @@ CD4+ T cell recognition.
   provided in input.
 * *BestAllele* gives the name of the best allele (based
   on the allele with best predicted score for the given peptide).
-* *%Rank* gives the predicted score for the best allele, given as a
-  percentile rank (i.e., the percentage of random peptides that
-  would have a score higher than the peptide provided in input - a value of 0 is
-  the best possible prediction and a value of 100 is the least good score).
-* *%Rank_perL* is similar to *%Rank* but computed based only on peptides
+* *%Rank_...* give the predicted score for the best allele and separately for
+  each allele asked. The score is given as a percentile rank (i.e., the
+  percent of random peptides that  would have a score higher than the peptide
+  provided in input among peptides of sizes 12-25 amino acids; best score is
+  about 0, worst score is 100).
+* *%Rank_best_perL* is similar to *%Rank_best* but computed based only on peptides
   having the same length than the given peptide. This score thus doesn't follow
   the length distribution observed in naturally presented ligands.
-* *BestCore* and *Best_s* indicate the best predicted core binding
-  sequence and offset respectively, for the peptide towards the given allele.
+* *Core_best* indicates the best predicted core binding sequence for each
+  peptide towards its best allele.
+* *CoreP1_...* give the most likely binding core position for the given peptide
+  towards the allele (this tells the position of the first amino acid from the
+  binding core (which has a size of 9 aa in the predictions), starting at a
+  value of 1 (i.e. if binding core corresponds to the 9 first amino acids
+  from the peptide, this *CoreP1 = 1*)).
 
-Peptides that are too short (less than 12 amino acids) or that contain non
-standard amino acids have *NA* or *nan* values instead of their scores.
+Peptides that are too short (less than 12 amino acids), too long (more than
+25 amino acids) or that contain non standard amino acids have *NA* values
+instead of their scores.
 
 ## How can I rank my peptides based on MixMHC2pred predictions
 
 The best way to rank your peptides is to use the global score with the best
-allele (*%Rank*), the best predicted peptides have the lowest
+allele (*%Rank_best*), the best predicted peptides have the lowest
 scores.
 
 ## Can I use MixMHC2pred for commercial purposes

@@ -11,12 +11,12 @@ MixMHC2pred is also available as a web application:
 
 ## Installation
 
-1) Download MixMHC2pred-1.1.zip file and move it to a directory
+1) Download MixMHC2pred-1.2.zip file and move it to a directory
 of your choice, where you have writing permissions.
 
-2) Unzip MixMHC2pred-1.1.zip in this directory.
+2) Unzip MixMHC2pred-1.2.zip in this directory.
 
-3) To test your installation, make sure you are in *MixMHC2pred-1.1* directory
+3) To test your installation, make sure you are in *MixMHC2pred-1.2* directory
    and run the following command, depending on your operating system:
 
    * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
@@ -38,7 +38,7 @@ of your choice, where you have writing permissions.
 ### Command
 
 ```bash
-MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options] 
+MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
 ```
 
 * Depending on your operating system, use MixMHC2pred, MixMHC2pred_unix or
@@ -50,15 +50,15 @@ MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
 
 * Input file (command `-i` or `--input`):
 File listing all the peptides with one peptide per line. It can also be a fasta
-file (lines starting with ">" are skipped). Please note that even in fasta
-format, the input should consist in a list of peptides: MixMHC2pred is not
-cutting inputted proteins into shorter fragments that could be presented but use
-the input sequences as given in the file directly.
+file (note that the peptide description given by the lines with ">" are not kept).
+Please note that even in fasta format, the input should consist in a list of
+peptides: MixMHC2pred is not cutting inputted proteins into shorter fragments
+that could be presented but it uses the input sequences as given in the file
+directly.
 
 * Output file (command `-o` or `--output`):
 The name of the output file (including the directory). Peptides are kept in the
-order from the input file. Peptides shorter than 12 amino acids or containing
-non-standard amino acids are kept but with a score of "nan".
+same order than in the input file.
 
 * Alleles (command: `-a` or `--alleles`):
 List of HLA-II alleles to test. Use for example the nomenclature *DRB1_03_01* for
@@ -66,8 +66,7 @@ HLA-DRB1\*03:01 and *DPA1_01_03__DPB1_04_01* for HLA-DPA1\*01:03-DPB1\*04:01. Th
 full list of alleles available and corresponding nomenclature is given in the
 file *Alleles_list.txt*.  
 If you want to make predictions with multiple alleles, list the different
-alleles separated by a space (e.g. `-a DRB1_11_01 DRB3_02_02`). Only the score
-from the best allele for each peptide is returned.
+alleles separated by a space (e.g. `-a DRB1_11_01 DRB3_02_02`).
 
 ### Optional arguments
 
@@ -75,11 +74,21 @@ from the best allele for each peptide is returned.
 When these switches are used (not recommended), the N- and/or C-terminal motifs
 are not included in the computations of the score from each peptide.
 
-* `--flat_ws`:
+* `--flat_ws` or `--best_s`:
 MixMHC2pred uses binding core offset preferences when computing the score from
 each peptide. It is nevertheless possible (but not recommended) to turn this
-feature off with this switch (the binding score is then summed over all possible
-offsets).
+feature off by using one of these two switches:
+  * `--flat_ws`: the binding score is the non-weighted sum over the scores from
+    each offset.
+  * `--best_s`: only the score that was highest among all the offsets is kept,
+    without giving weights to the offsets.
+
+* `-x` or `--with_unspec_aa`:
+By default the peptide sequences can only contain the 20 standard amino acids
+and any peptide containing a non-standard aa will return a *NA* score. But
+when this switch is used, the sequences can also include *unspecified amino
+acids* (should use either "-" or the letter "X" to represent such an unspecified
+amino acid).
 
 ### Results returned and additional information
 
@@ -88,28 +97,39 @@ offsets).
   presented peptides, it does not output a predicted affinity value, simply a
   score.
 
-* Input should consist of list of peptides, likely of sizes 12-21 amino acid
-  long (shorter peptides return *nan* scores for the moment, while there is
-  only a very low probability for longer peptides to be presented on HLA-II).
-  At the moment, MixMHC2pred is not cutting longer peptides/proteins into
-  shorter fragments but use the peptides given in input as is.
+* Input should consist in a list of peptides, not proteins. Currently,
+  MixMHC2pred is not cutting longer peptides/proteins into shorter fragments
+  but use the peptides given in input as is.
 
-* The score is computed for each allele provided in input, and the maximal score
-  is used to determine the most likely allele (column *BestAllele* in output file).
+* The score is computed for each allele provided in input. Results are returned
+  for each allele in separate columns and additional columns give the results
+  from the best allele for each peptide (columns *BestAllele* and *..._best* in
+  the output file, determined by the allele that had the maximal score,
+  i.e. the most likely allele with which the peptide would be bound).
 
-* The score returned (column *%Rank*) corresponds to a percentile rank (best
-  score is 0, worst score is 100). This tells among random peptides, the percent
-  of peptides expected to be better binders to this allele than the given
-  peptide. This score is computed such that the top 1% best random peptides will
-  have a length distribution following the one observed in naturally presented
-  peptides.
+* The scores returned (columns *%Rank*) correspond to a percentile rank (best
+  score is about 0, worst score is 100). This tells among random peptides, the
+  percent of peptides expected to be better binders to this allele than the given
+  peptide (among peptides of sizes 12-25 amino acids). This score is computed
+  such that the top 1% best random peptides will have a length distribution
+  following the one observed in naturally presented peptides.
 
-* The *%Rank_perL* is similar but computed only between peptides having the same
-  length. This score thus doesn't follow the length distribution observed in
-  naturally presented ligands.
+* The *%Rank_best_perL* is similar but computed only between peptides having the
+  same length. This score thus doesn't follow the length distribution observed
+  in naturally presented ligands (this value is only returned for the best
+  allele).
 
-* The *BestCore* and *Best_s* returned correspond to the most likely binding
-  core and offset for the given peptide towards its best allele.
+* The *CoreP1_...* columns tell what is the most likely binding core position
+  for the given peptide towards the allele (this tells the position of the
+  first amino acid from the binding core (which has a size of 9 aa in the
+  predictions), starting at a value of 1 (i.e. if binding core corresponds to
+  the 9 first amino acids from the peptide, this *CoreP1 = 1*)).
+
+* For conveniance, the binding core sequence is also indicated for the best
+  allele per peptide (column *Core_best*, for the other allleles this can be
+  obtained from the *CoreP1* as indicated above).
+
+* Peptides shorter than 12 amino acids, longer than 25 amino acids or containing non-standard amino acids are kept but with a score of "NA".
   
 * The list of alleles available is provided in *Alleles_list.txt* showing the
   HLA-nomenclature and the corresponding nomenclature to use when running
@@ -119,9 +139,12 @@ offsets).
 
 Latest version of MixMHC2pred is available at <https://github.com/GfellerLab/MixMHC2pred>.
 
+Check the file *NEWS* to see the main changes of the given
+version.
+
 ## Web application
 
-MixMHC2pred is also available as a web application at 
+MixMHC2pred is also available as a web application at
 <http://mixmhc2pred.gfellerlab.org>.
 
 ## License
@@ -130,7 +153,7 @@ MixMHC2pred can be used freely by academic groups for non-commercial purposes
 (see license). The product is provided free of charge, and, therefore, on an
 "as is" basis, without warranty of any kind.
 
-**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 1.1) or any data
+**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 1.2) or any data
 provided with the script in any for-profit application, you are required to
 obtain a separate license. To do so, please contact <eauffarth@licr.org> at the
 Ludwig Institute for Cancer Research Ltd.

@@ -1,0 +1,28 @@
+Release notes from MixMHC2pred
+========================================================================
+
+Version 1.2 (03.02.2020)
+------------------------------------------------------------------------
+* Output contains now also the individual predictions from each allele in
+  addition to the score of the best allele per peptide.
+* Outputted core positions correspond now to the P1 of the binding core, counted
+  from the N-terminus of the peptide (first amino acid has a value of 1).
+* Added a "FAQ" document.
+* There is an option to allow having unspecified amino acids in the peptide
+  sequence (these should be written as "X" or "-").
+* Added the option "--best_s" (see README).
+* Slightly updated the %Rank computations, avoiding in general having scores of
+  exactly 0, and allowing the predictions for peptides up to a size of 25 amino
+  acids.
+* Corrected a bug when input file was given in fasta format with multiple lines
+  per peptide sequence.
+
+
+Version 1.1 (14.10.2019)
+------------------------------------------------------------------------
+* Public release of MixMHC2pred accompanying the Nature Biotechnology paper.
+
+
+Version 1.0 (08.02.2019)
+------------------------------------------------------------------------
+* Public release of MixMHC2pred accompanying our bioRxiv preprint.

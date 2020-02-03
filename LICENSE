@@ -8,7 +8,7 @@ WHEREAS, LICENSEE desires to license the PROGRAM and LICR desires to grant a lic
 NOW, THEREFORE, in consideration of the promises and covenants made herein, the parties hereto agree as follows:
 
 1. DEFINITIONS
-1.1 PROGRAM shall mean the source code known as MixMHC2pred (version 1.1), as it exists on the EFFECTIVE DATE.
+1.1 PROGRAM shall mean the source code known as MixMHC2pred (version 1.2), as it exists on the EFFECTIVE DATE.
 
 2. LICENSE
 2.1 Grant. Subject to the terms of this Agreement, LICR hereby grants to LICENSEE, solely for academic non-commercial research purposes, a non-exclusive, non-transferable license to: (a) download, execute and display the PROGRAM and (b) create bug fixes and modify the PROGRAM. LICENSEE hereby automatically grants to LICR a non-exclusive, royalty-free, irrevocable license to any LICENSEE bug fixes or modifications to the PROGRAM with unlimited rights to sublicense and/or distribute.  LICENSEE agrees to provide any such modifications and bug fixes to LICR promptly upon their creation.
@@ -17,7 +17,7 @@ The LICENSEE may apply the PROGRAM in a pipeline to data owned by users other th
 2.3 License Limitations. Nothing in this Agreement shall be construed to confer any rights upon LICENSEE by implication, estoppel, or otherwise to any computer software, trademark, intellectual property, or patent rights of LICR, or of any other entity, except as expressly granted herein. LICENSEE agrees that the PROGRAM, in whole or part, shall not be used for any commercial purpose, including without limitation, as the basis of a commercial software or hardware product or to provide services. LICENSEE further agrees that the PROGRAM shall not be copied or otherwise adapted in order to circumvent the need for obtaining a license for use of the PROGRAM.
 3. OWNERSHIP OF INTELLECTUAL PROPERTY
 LICENSEE acknowledges that title to the PROGRAM shall remain with LICR. The PROGRAM shall be marked with the notice of attribution to contributors. LICENSEE shall retain such notice on all copies. LICENSEE agrees to include appropriate attribution if any results obtained from use of the PROGRAM are included in any publication.
-Notice of attribution: The MixMHC2pred (version 1.1) program was made available through the generosity of Ludwig Institute for Cancer Research Ltd.
+Notice of attribution: The MixMHC2pred (version 1.2) program was made available through the generosity of Ludwig Institute for Cancer Research Ltd.
 LICENSEE shall not use any trademark or trade name of LICR, or any variation, adaptation, or abbreviation, of such marks or trade names, or any names of officers, faculty, students, employees, or agents of LICR except as states above for attribution purposes.
 
 4. INDEMNIFICATION
