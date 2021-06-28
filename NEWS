@@ -1,6 +1,12 @@
 Release notes from MixMHC2pred
 ========================================================================
 
+
+Version 1.2 (28.06.2021)
+------------------------------------------------------------------------
+* Public release of MixMHC2pred to predict phosphoryalted HLA-II ligands.
+
+
 Version 1.2 (03.02.2020)
 ------------------------------------------------------------------------
 * Output contains now also the individual predictions from each allele in

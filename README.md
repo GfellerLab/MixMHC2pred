@@ -21,15 +21,28 @@ of your choice, where you have writing permissions.
 
    * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
 
+   or to test phosphorylated ligands
+
+      `./MixMHC2pred -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
+
    * Unix:   `./MixMHC2pred_unix -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
 
+   or to test phosphorylated ligands
+   
+      `./MixMHC2pred_unix -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
+
    * Windows:   `MixMHC2pred.exe -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
+   
+   or to test phosphorylated ligands
+   
+      `MixMHC2pred.exe -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
 
    Your file *test/out.txt* should be the same as *test/out_compare.txt*.
    Running the software should take only few seconds.
 
    The *testData.txt* file corresponds to HLA-II peptidomics data obtained in
    our study from the cell line *CD165* (it contains 8715 unique peptides).
+
 
 4) (Optional) To run MixMHC2pred from anywhere on your computer, make an alias of MixMHC2pred executable (see above for which one depending on operating system) or add it in your path.
 
