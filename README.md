@@ -1,7 +1,8 @@
 # MixMHC2pred
 
-MixMHC2pred is a predictor of HLA class II ligands and epitopes. It is described
-in the publication (available
+MixMHC2pred is a predictor of HLA class II ligands and epitopes. The new version 1.3 was expanded 
+for predictions of phosphorylated HLA-II ligands (in the input file phosphorylated serine, threonine, and tyrosine 
+are given by lowercase letters of the amino acid (i.e. s, t, y)). The original version 1.2 is described in the publication (available
 [here](https://www.nature.com/articles/s41587-019-0289-6)):  
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
 deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
@@ -11,10 +12,10 @@ MixMHC2pred is also available as a web application:
 
 ## Installation
 
-1) Download MixMHC2pred-1.2.zip file and move it to a directory
+1) Download MixMHC2pred-MixMHC2pred1.3.zip file and move it to a directory
 of your choice, where you have writing permissions.
 
-2) Unzip MixMHC2pred-1.2.zip in this directory.
+2) Unzip MixMHC2pred-MixMHC2pred1.3.zip in this directory.
 
 3) To test your installation, make sure you are in *MixMHC2pred-1.2* directory
    and run the following command, depending on your operating system:
@@ -150,7 +151,9 @@ amino acid).
 
 ## Latest version
 
-Latest version of MixMHC2pred is available at <https://github.com/GfellerLab/MixMHC2pred>.
+Latest version of MixMHC2pred including phosphorylated HLA-II ligands (v1.3) is available at <https://github.com/GfellerLab/MixMHC2pred/tree/MixMHC2pred1.3>.
+
+Latest version of MixMHC2pred v1.2 is available at <https://github.com/GfellerLab/MixMHC2pred>.
 
 Check the file *NEWS* to see the main changes of the given
 version.
