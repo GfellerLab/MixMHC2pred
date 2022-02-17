@@ -1,14 +1,13 @@
 # MixMHC2pred
 
-MixMHC2pred is a predictor of HLA class II ligands and epitopes. The new version 1.3 was expanded 
+MixMHC2pred is a predictor of HLA class II ligands and epitopes. This new version 1.3 was expanded 
 for predictions of phosphorylated HLA-II ligands (in the input file phosphorylated serine, threonine, and tyrosine 
-are given by lowercase letters of the amino acid (i.e. s, t, y)). The original version 1.2 is described in the publication (available
-[here](https://www.nature.com/articles/s41587-019-0289-6)):  
+are given by lowercase letters of the amino acid (i.e. s, t, y)). For predictions of unmodified HLA-II ligands, it is recommended to use the original version 1.2. 
+
+The original version MixMHC2pred 1.2 is described in the publication (available [here](https://www.nature.com/articles/s41587-019-0289-6)):  
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
 deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
-
-MixMHC2pred is also available as a web application:
-<http://mixmhc2pred.gfellerlab.org>.
+ 
 
 ## Installation
 
@@ -17,32 +16,23 @@ of your choice, where you have writing permissions.
 
 2) Unzip MixMHC2pred-MixMHC2pred1.3.zip in this directory.
 
-3) To test your installation, make sure you are in *MixMHC2pred-1.2* directory
+3) To test your installation, make sure you are in *MixMHC2pred-1.3* directory
    and run the following command, depending on your operating system:
 
-   * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
+   * Mac OS: 
+   `./MixMHC2pred -i test/testData.txt  -o test/testData_out.txt -a DRB1_03_01 DRB1_07_01 DRB3_01_01 DRB4_01_01`
 
-   or to test phosphorylated ligands
+   * Unix:
+   `./MixMHC2pred_unix -i test/testData.txt  -o test/testData_out.txt -a DRB1_03_01 DRB1_07_01 DRB3_01_01 DRB4_01_01`
 
-      `./MixMHC2pred -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
-
-   * Unix:   `./MixMHC2pred_unix -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
-
-   or to test phosphorylated ligands
-   
-      `./MixMHC2pred_unix -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
-
-   * Windows:   `MixMHC2pred.exe -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
-   
-   or to test phosphorylated ligands
-   
-      `MixMHC2pred.exe -i test/testData_phospho.txt  -o test/out_phospho.txt -a DRB1_01_01 DPA1_01_03__DPB1_04_01 DPA1_01_03__DPB1_06_01`
+   * Windows:
+   `MixMHC2pred.exe -i test/testData.txt  -o test/testData_out.txt -a DRB1_03_01 DRB1_07_01 DRB3_01_01 DRB4_01_01`
 
    Your file *test/out.txt* should be the same as *test/out_compare.txt*.
    Running the software should take only few seconds.
 
    The *testData.txt* file corresponds to HLA-II peptidomics data obtained in
-   our study from the cell line *CD165* (it contains 8715 unique peptides).
+   our study from the cell line *3808HMC* (it contains 39 unique phosphorylated peptides).
 
 
 4) (Optional) To run MixMHC2pred from anywhere on your computer, make an alias of MixMHC2pred executable (see above for which one depending on operating system) or add it in your path.
@@ -160,7 +150,7 @@ version.
 
 ## Web application
 
-MixMHC2pred is also available as a web application at
+MixMHC2pred v1.2 is also available as a web application at
 <http://mixmhc2pred.gfellerlab.org>.
 
 ## License
