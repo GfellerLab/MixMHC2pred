@@ -1,6 +1,15 @@
 Release notes from MixMHC2pred
 ========================================================================
 
+Version 2.0.RC (10.06.2022)
+* Major update of MixMHC2pred, allowing for pan-allele predictions for human and
+  non-human MHC-II alleles.
+* Implementation vastly changed; it is now based on multiple neural networks and
+  it was trained on a much larger MHC-II peptidomics dataset.
+* Please note that the format of the input and output files have changed, as
+  well as the available input arguments.
+
+
 Version 1.2 (03.02.2020)
 ------------------------------------------------------------------------
 * Output contains now also the individual predictions from each allele in

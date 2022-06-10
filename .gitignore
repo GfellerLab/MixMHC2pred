@@ -7,3 +7,10 @@
 
 # License file in word format.
 License.docx
+
+# Compiled object files
+*.o
+bin/**
+
+# Makefile is in bin folder but should be included
+!bin/Makefile

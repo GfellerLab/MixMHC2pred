@@ -1,37 +1,47 @@
 # MixMHC2pred
 
-MixMHC2pred is a predictor of HLA class II ligands and epitopes. It is described
-in the publication (available
-[here](https://www.nature.com/articles/s41587-019-0289-6)):  
+MixMHC2pred is a pan-allele predictor of MHC class II ligands and epitopes.
+It is described in:  
+Racle, J., et al., Accurate predictions of MHC-II specificities (in prep.).
+
+and
+
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
-deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
+deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019)
+(available [here](https://www.nature.com/articles/s41587-019-0289-6)).
 
 MixMHC2pred is also available as a web application:
 <http://mixmhc2pred.gfellerlab.org>.
 
 ## Installation
 
-1) Download MixMHC2pred-1.2.zip file and move it to a directory
+1) Download MixMHC2pred-2.0.zip file and move it to a directory
 of your choice, where you have writing permissions.
 
-2) Unzip MixMHC2pred-1.2.zip in this directory.
+2) Unzip MixMHC2pred-2.0.zip in this directory.
 
-3) To test your installation, make sure you are in *MixMHC2pred-1.2* directory
+3) To test your installation, make sure you are in *MixMHC2pred-2.0* directory
    and run the following command, depending on your operating system:
 
-   * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
+   * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_15_01 DRB5_01_01 DPA1_02_01__DPB1_01_01 DQA1_01_02__DQB1_05_01 DQA1_01_02__DQB1_06_02`
 
-   * Unix:   `./MixMHC2pred_unix -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
+   * Unix:   `./MixMHC2pred_unix -i test/testData.txt -o test/out.txt -a DRB1_15_01 DRB5_01_01 DPA1_02_01__DPB1_01_01 DQA1_01_02__DQB1_05_01 DQA1_01_02__DQB1_06_02`
 
-   * Windows:   `MixMHC2pred.exe -i test/testData.txt -o test/out.txt -a DRB1_11_01 DRB3_02_02 DPA1_01_03__DPB1_04_01 DQA1_05_05__DQB1_03_01`
+   * Windows:   `MixMHC2pred.exe -i test/testData.txt -o test/out.txt -a DRB1_15_01 DRB5_01_01 DPA1_02_01__DPB1_01_01 DQA1_01_02__DQB1_05_01 DQA1_01_02__DQB1_06_02`
 
    Your file *test/out.txt* should be the same as *test/out_compare.txt*.
-   Running the software should take only few seconds.
+   Running the software takes few seconds or more when testing lots of peptides and alleles.
 
-   The *testData.txt* file corresponds to HLA-II peptidomics data obtained in
-   our study from the cell line *CD165* (it contains 8715 unique peptides).
+   The *testData.txt* file corresponds to a subset of the HLA-II peptidomics
+   data obtained from the cell line *DOHH2* in Dheilly et al., *Cancer Cell* (2020),
+   containing some peptides bound to the HLA in the reverse direction.
 
-4) (Optional) To run MixMHC2pred from anywhere on your computer, make an alias of MixMHC2pred executable (see above for which one depending on operating system) or add it in your path.
+4) (Optional) To run MixMHC2pred from anywhere on your computer, make an alias
+   of MixMHC2pred executable (see above for which one depending on operating system)
+   or add it in your path.
+
+If using a non-standard OS, it is possible to compile MixMHC2pred using the
+Makefile found in the *bin* folder.
 
 ## Running
 
@@ -48,20 +58,16 @@ MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
 
 ### Required arguments
 
-* Input file (command `-i` or `--input`):
-File listing all the peptides with one peptide per line. It can also be a fasta
-file (note that the peptide description given by the lines with ">" are not kept).
-Please note that even in fasta format, the input should consist in a list of
-peptides: MixMHC2pred is not cutting inputted proteins into shorter fragments
-that could be presented but it uses the input sequences as given in the file
-directly.
+* Input file (command `-i <file>` or `--input <file>`):  
+File listing all the peptides. It should contain two columns: the first one is the sequence of the peptide, and 2nd column is the sequence of the context of the peptides (it should include the 3 AAs before the start of the peptide, followed by the 3 first AAs of the peptide, followed by the 3 last AAs of the peptide, followed by the 3 AAs just after the peptide). When the peptide lies near the begin or end of a protein, the corresponding context AAs should be written as "-", i.e. for the protein *ACDEFG...* if the peptide is *CDEFG...* the first 6 AA encoding its context should be written as *--ACDE* (and these 6 AAs should be directly followed by the 6 AAs describing the context near the C-terminal of the peptide). Also, if some AAs from the context of a peptide are not known, the unknown AAs should be written with the letter *X*. See *test/testData.txt* for an example of input file.
+When using the `no_context` option (see below), then this input file should only contain the list of the peptides, without any 2nd column of the context (an example input file without in such a case is available at *test/testData_noContext.txt*).
 
-* Output file (command `-o` or `--output`):
+* Output file (command `-o <file>` or `--output <file>`):  
 The name of the output file (including the directory). Peptides are kept in the
 same order than in the input file.
 
-* Alleles (command: `-a` or `--alleles`):
-List of HLA-II alleles to test. Use for example the nomenclature *DRB1_03_01* for
+* Alleles (command: `-a <alleles>` or `--alleles <alleles>`):  
+List of HLA-II alleles to test. Use the nomenclature *DRB1_03_01* for
 HLA-DRB1\*03:01 and *DPA1_01_03__DPB1_04_01* for HLA-DPA1\*01:03-DPB1\*04:01. The
 full list of alleles available and corresponding nomenclature is given in the
 file *Alleles_list.txt*.  
@@ -70,25 +76,18 @@ alleles separated by a space (e.g. `-a DRB1_11_01 DRB3_02_02`).
 
 ### Optional arguments
 
-* `--no_Nterm` and/or `--no_Cterm`:
-When these switches are used (not recommended), the N- and/or C-terminal motifs
-are not included in the computations of the score from each peptide.
-
-* `--flat_ws` or `--best_s`:
-MixMHC2pred uses binding core offset preferences when computing the score from
-each peptide. It is nevertheless possible (but not recommended) to turn this
-feature off by using one of these two switches:
-  * `--flat_ws`: the binding score is the non-weighted sum over the scores from
-    each offset.
-  * `--best_s`: only the score that was highest among all the offsets is kept,
-    without giving weights to the offsets.
-
-* `-x` or `--with_unspec_aa`:
-By default the peptide sequences can only contain the 20 standard amino acids
-and any peptide containing a non-standard aa will return a *NA* score. But
-when this switch is used, the sequences can also include *unspecified amino
-acids* (should use either "-" or the letter "X" to represent such an unspecified
-amino acid).
+* `--no_context`:  
+In principle, MixMHC2pred includes the peptide context for its predictions
+(i.e. corresponding to a sequence of 12 AAs in total, including AAs just before
+and just after the peptide as explained above). It is nevertheless possible
+to decide to not consider any context information at all, when using this option.
+It is generally advised to include the context, in order to search for best
+candidate epitopes. But if analyzing a posteriori pre-cleaved peptide sequences
+(e.g. in experiments testing specific peptides directly, that therefore did not
+need to be cleaved by the cell), it may be a good to not consider the
+context encoding (often multiple overlapping epitopes are observed, so the
+peptide tested may not correspond to the best peptide based on context but it
+could still be recognized by the same T cells when given directly).
 
 ### Results returned and additional information
 
@@ -104,20 +103,17 @@ amino acid).
 * The score is computed for each allele provided in input. Results are returned
   for each allele in separate columns and additional columns give the results
   from the best allele for each peptide (columns *BestAllele* and *..._best* in
-  the output file, determined by the allele that had the maximal score,
-  i.e. the most likely allele with which the peptide would be bound).
+  the output file, determined by the allele that had the best score,
+  i.e. the most likely allele by which the peptide would be presented).
+
+* The two first columns of the output file give the *Peptide* and *Context*
+  sequence of the peptide, which were given in the input file. When the option
+  `--no_context` is used, the column *Context* is kept but it is empty.
 
 * The scores returned (columns *%Rank*) correspond to a percentile rank (best
   score is about 0, worst score is 100). This tells among random peptides, the
-  percent of peptides expected to be better binders to this allele than the given
-  peptide (among peptides of sizes 12-25 amino acids). This score is computed
-  such that the top 1% best random peptides will have a length distribution
-  following the one observed in naturally presented peptides.
-
-* The *%Rank_best_perL* is similar but computed only between peptides having the
-  same length. This score thus doesn't follow the length distribution observed
-  in naturally presented ligands (this value is only returned for the best
-  allele).
+  percent of peptides expected to be better presented by this allele than the given
+  peptide.
 
 * The *CoreP1_...* columns tell what is the most likely binding core position
   for the given peptide towards the allele (this tells the position of the
@@ -126,13 +122,21 @@ amino acid).
   the 9 first amino acids from the peptide, this *CoreP1 = 1*)).
 
 * For conveniance, the binding core sequence is also indicated for the best
-  allele per peptide (column *Core_best*, for the other allleles this can be
+  allele per peptide (column *Core_best*, for the other alleles this can be
   obtained from the *CoreP1* as indicated above).
 
-* Peptides shorter than 12 amino acids, longer than 25 amino acids or containing non-standard amino acids are kept but with a score of "NA".
+* The *subSpec_...* columns tell in which sub-specificity the given peptide
+  is likely bound toward the given allele. The value *1* corresponds to the
+  main sub-specificity (the only one for most alleles). But for example
+  for *DRB1\*08:01* allele a 2nd sub-specificity exists and is indicated by the
+  value *2*. For alleles accomodating reverse binding, a value of *-1* indicates
+  that the given peptide is bound in the reverse orientation.
+
+* Peptides shorter than 12 amino acids, longer than 21 amino acids or
+  containing non-standard amino acids are kept but with a score of "NA".
   
 * The list of alleles available is provided in *Alleles_list.txt* showing the
-  HLA-nomenclature and the corresponding nomenclature to use when running
+  IPD-IMGT/HLA nomenclature and the corresponding nomenclature to use when running
   MixMHC2pred.
 
 ## Latest version
@@ -153,7 +157,7 @@ MixMHC2pred can be used freely by academic groups for non-commercial purposes
 (see license). The product is provided free of charge, and, therefore, on an
 "as is" basis, without warranty of any kind.
 
-**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 1.2) or any data
+**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 2.0) or any data
 provided with the script in any for-profit application, you are required to
 obtain a separate license. To do so, please contact <eauffarth@licr.org> at the
 Ludwig Institute for Cancer Research Ltd.
@@ -168,6 +172,10 @@ For license-related questions, please contact Ece Auffarth
 ## How to cite
 
 To cite MixMHC2pred, please refer to:
+
+Racle, J., et al., Accurate predictions of MHC-II specificities (in prep.).
+
+and
 
 Racle, J., et al. Robust prediction of HLA class II epitopes by deep motif
 deconvolution of immunopeptidomes. *Nat. Biotechnol.* 37, 1283–1286 (2019).
