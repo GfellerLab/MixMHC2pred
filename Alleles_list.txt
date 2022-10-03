@@ -1,4 +1,4 @@
-List of alleles available in MixMHC2pred v2.0.RC
+List of alleles available in MixMHC2pred v2.0
 AlleleName	OfficialName
 DRB1_01_01	HLA-DRB1*01:01
 DRB1_01_02	HLA-DRB1*01:02

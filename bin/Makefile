@@ -10,14 +10,12 @@ LDFLAGS = # For flags used when linking the .o files
 VPATH = ..:../src:../external
 
 target = MixMHC2pred
-test_code = test_code
 
 # Add/name different options based on OS (such that 'make' creates and 
 # searches for the correct target name and possible use static libraries).
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
     detected_OS = Windows
 	target := $(target).exe
-	test_code := $(test_code).exe
 else
     detected_OS = $(shell sh -c 'uname 2>/dev/null || echo Unknown')
 	ifeq ($(detected_OS),Linux)
@@ -37,9 +35,8 @@ ifneq ($(detected_OS),Darwin)
 endif
 
 
-# all: $(target) $(test_code)
 all: $(target)
-# all: $(test_code)
+
 
 # When calling "make debug" it'll compile MixMHC2pred based on "debug
 # configuration".
@@ -51,9 +48,6 @@ $(target): MixMHC2pred.o helper_MixMHC2pred.o helper_nnets.o alleles_def.o \
 		whereami.o helper_general.o
 	$(LINK.cc) -o ../$@ $^
 
-$(test_code): test_code.o helper_MixMHC2pred.o helper_nnets.o alleles_def.o \
-		whereami.o helper_general.o
-	$(LINK.cc) -o ../$@ $^
 
 helper_MixMHC2pred.o: helper_MixMHC2pred.hpp ## helper_general.hpp
 # No need to indicate the .cpp when using an implicit compile rule.
@@ -65,7 +59,6 @@ MixMHC2pred.o: helper_MixMHC2pred.hpp helper_nnets.hpp alleles_def.hpp argparse/
 # To tell that MixMHC2pred.o is also depending on these headers to
 # recompile the prog in case the files change.
 
-test_code.o: helper_MixMHC2pred.hpp helper_nnets.hpp alleles_def.hpp argparse/argparse.hpp
 
 whereami.o: whereami/src/whereami.c
 	gcc -c -o $@ $^

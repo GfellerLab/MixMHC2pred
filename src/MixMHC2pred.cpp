@@ -34,7 +34,7 @@ int main(int argc, const char *argv[]) {
     vector<string> alleles;
     string pepFile, oFile, rPepFolder, execFolder, allelesDefFolder("full"),
         nnetsDefRoot("nnetsWeights"), nnetsDefFile, contextType("full"),
-        version("v2.0.RC");
+        version("v2.0");
     bool needAllAlleles, onlyRawScores(false), noContext;
     int ws_scoring(1);
 
@@ -133,16 +133,18 @@ int main(int argc, const char *argv[]) {
         outStream << "\n# Alleles folder: " << allelesDefFolder
             << "\n# Context type: " << contextType
             << "\n#\n# MixMHC2pred is freely available for academic users." << endl
-            << "# Private companies should contact eauffarth@licr.org "
+            << "# Private companies should contact nbulgin@lcr.org "
             << "at the Ludwig Institute\n#  for Cancer Research Ltd "
             << "for commercial licenses.\n#" << endl
             << "# To cite MixMHC2pred, please refer to:" << endl
-            << "# Racle, J., et al., Accurate predictions of MHC-II "
-            << "specificities (in prep.).\n# and\n"
+            << "# Racle, J., et al., Machine learning predictions of MHC-II "
+            << "specificities\n#  reveal alternative binding mode of class II "
+            << "epitopes. bioRxiv (2022).\n# and\n"
             << "# Racle, J., et al. Robust prediction of HLA class II epitopes "
             << "by deep motif\n#  deconvolution of immunopeptidomes. Nat. "
             << "Biotechnol. 37, 1283-1286 (2019).\n#\n" << string(20, '#')
             << endl;
+
              
 
         printPepResults(outStream, peptides, noContext);

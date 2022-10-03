@@ -49,7 +49,7 @@ scores.
 ## Can I use MixMHC2pred for commercial purposes
 
 If you plan to use MixMHC2pred for commercial purposes, you are required to
-obtain a separate license. To do so, please contact <eauffarth@licr.org>
+obtain a separate license. To do so, please contact <nbulgin@lcr.org>
 at the Ludwig Institute for Cancer Research Ltd.
 
 ## Who should I contact in case of a technical or other issue
@@ -62,7 +62,9 @@ that is causing the issue.
 
 If you are using MixMHC2pred, please refer to
 
-Racle, J., et al., Accurate predictions of MHC-II specificities (in prep.).
+Racle, J., et al., Machine learning predictions of MHC-II specificities reveal
+alternative binding mode of class II epitopes. *bioRxiv* (2022)
+(available [here](https://doi.org/10.1101/2022.06.26.497561)).
 
 and
 

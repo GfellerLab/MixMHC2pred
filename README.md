@@ -2,7 +2,9 @@
 
 MixMHC2pred is a pan-allele predictor of MHC class II ligands and epitopes.
 It is described in:  
-Racle, J., et al., Accurate predictions of MHC-II specificities (in prep.).
+Racle, J., et al., Machine learning predictions of MHC-II specificities reveal
+alternative binding mode of class II epitopes. *bioRxiv* (2022)
+(available [here](https://doi.org/10.1101/2022.06.26.497561)).
 
 and
 
@@ -59,8 +61,20 @@ MixMHC2pred -i input_file -o output_file -a allele1 allele2 [additional options]
 ### Required arguments
 
 * Input file (command `-i <file>` or `--input <file>`):  
-File listing all the peptides. It should contain two columns: the first one is the sequence of the peptide, and 2nd column is the sequence of the context of the peptides (it should include the 3 AAs before the start of the peptide, followed by the 3 first AAs of the peptide, followed by the 3 last AAs of the peptide, followed by the 3 AAs just after the peptide). When the peptide lies near the begin or end of a protein, the corresponding context AAs should be written as "-", i.e. for the protein *ACDEFG...* if the peptide is *CDEFG...* the first 6 AA encoding its context should be written as *--ACDE* (and these 6 AAs should be directly followed by the 6 AAs describing the context near the C-terminal of the peptide). Also, if some AAs from the context of a peptide are not known, the unknown AAs should be written with the letter *X*. See *test/testData.txt* for an example of input file.
-When using the `no_context` option (see below), then this input file should only contain the list of the peptides, without any 2nd column of the context (an example input file without in such a case is available at *test/testData_noContext.txt*).
+File listing all the peptides. It should contain two columns: the 1st column being the
+sequence of the peptide and 2nd column beeing its context sequence (12 amino acids
+long: 3 residues upstream of the peptide, 3 N-terminal residues of the peptide,
+3 C-terminal residues of the peptide and 3 residues downstream of the peptide).
+When the peptide lies near the begin or end of a protein, the corresponding
+context AAs should be written as "-", i.e. for the protein *ACDEFG...* if the
+peptide is *CDEFG...* the first 6 AA encoding its context should be written as
+*--ACDE* (and these 6 AAs should be directly followed by the 6 AAs describing the
+context near the C-terminal of the peptide). Also, if some AAs from the context
+of a peptide are not known, the unknown AAs should be written with the letter *X*.
+See *test/testData.txt* for an example of input file.
+When using the `no_context` option (see below), then this input file should only
+contain the list of the peptides, without any 2nd column of the context (an
+example input file without in such a case is available at *test/testData_noContext.txt*).
 
 * Output file (command `-o <file>` or `--output <file>`):  
 The name of the output file (including the directory). Peptides are kept in the
@@ -87,7 +101,12 @@ candidate epitopes. But if analyzing a posteriori pre-cleaved peptide sequences
 need to be cleaved by the cell), it may be a good to not consider the
 context encoding (often multiple overlapping epitopes are observed, so the
 peptide tested may not correspond to the best peptide based on context but it
-could still be recognized by the same T cells when given directly).
+could still be recognized by the same T cells when given directly). When using
+this `--no_context` option, then the input file should only contain the list of
+peptides, without their context. An example input file is available at
+*test/testData_noContext.txt*; results of running MixMHC2pred without the
+context on this file, based on the same alleles as the first example above is
+given in *test/out_noContext_compare.txt*.
 
 ### Results returned and additional information
 
@@ -159,21 +178,23 @@ MixMHC2pred can be used freely by academic groups for non-commercial purposes
 
 **FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 2.0) or any data
 provided with the script in any for-profit application, you are required to
-obtain a separate license. To do so, please contact <eauffarth@licr.org> at the
+obtain a separate license. To do so, please contact <nbulgin@lcr.org> at the
 Ludwig Institute for Cancer Research Ltd.
 
 ## Contact information
 
 For scientific questions, please contact Julien Racle (<julien.racle@unil.ch>) or David Gfeller (<david.gfeller@unil.ch>).
 
-For license-related questions, please contact Ece Auffarth
-(<eauffarth@licr.org>).
+For license-related questions, please contact Nadette Bulgin
+(<nbulgin@lcr.org>).
 
 ## How to cite
 
 To cite MixMHC2pred, please refer to:
 
-Racle, J., et al., Accurate predictions of MHC-II specificities (in prep.).
+Racle, J., et al., Machine learning predictions of MHC-II specificities reveal
+alternative binding mode of class II epitopes. *bioRxiv* (2022)
+(available [here](https://doi.org/10.1101/2022.06.26.497561)).
 
 and
 
