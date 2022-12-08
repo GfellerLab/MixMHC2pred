@@ -8,6 +8,9 @@
 # License file in word format.
 License.docx
 
+# Allele definition files
+PWMdef/
+
 # Compiled object files
 *.o
 bin/**

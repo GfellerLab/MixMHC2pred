@@ -15,6 +15,8 @@
 // ***** Class of pars containing parameter values to use as global variables.
 /* Definintion of the default parameter values. */
 vector<string> pars::alleles;
+string pars::version;
+bool pars::ignore_version;
 size_t pars::context_L = 3, pars::n_aa = 20, pars::L_core = 9, pars::n_nnets = 5;
 map<char, int> pars::aa_to_ind = { {'A', 0}, {'C', 1}, {'D', 2}, {'E', 3}, {'F', 4}, {'G', 5}, {'H', 6}, {'I', 7}, {'K', 8}, {'L', 9}, {'M', 10}, {'N', 11}, {'P', 12}, {'Q', 13}, {'R', 14}, {'S', 15}, {'T', 16}, {'V', 17}, {'W', 18}, {'Y', 19}, {'X', 20}, {'-', 20} };
 
@@ -45,9 +47,13 @@ map< char, vector<double> > pars::blo_plus_1 = {
 
 // ***** Class of Peptide
 Peptide::Peptide(int nAlleles, string seq, string context, bool innerContext)
-    : sequence(seq), pepScoreRaw(nan("")), score_isNA(false) {
-        PPMrank_L = vector<double>(nAlleles, nan(""));
-        nnets_rank = vector<double>(nAlleles, 0.0);
+    : sequence(seq), score_isNA(false) {
+        PWMrank_L = PWMrawScore = vector<double>(nAlleles, nan(""));
+        nnets_rank = nnets_rawScore = vector<double>(nAlleles, 0.0);
+        /* Need to set these to 0 for nnets instead of Nan as we'll add together
+           the values from the various repetitions (without checking if current
+           repet is the 1st one or not). Instead, we have a boolean indicating
+           if this nnets_rank/rawScore is NA. */
         P1 = vector<int>(nAlleles, -1);
         best_subSpec_ids = vector<int>(nAlleles, 0);
         if (context.empty()){
@@ -156,27 +162,16 @@ void pepData_import(string pepFile, vector<Peptide> &peptides,
 }
 
 void comp_pepScores(vector<Peptide> &peptides,
-                    bool onlyRawScores,
                     int ws_scoring, bool needAllAlleles,
                     string rPepFolder, set<int> &pepL_used,
-                    string allelesDefFolder) {
+                    const vector<string> &allelesDefFolders) {
     string tString;
     vector<string> alleles(pars::alleles), allelesMissing, predDefFiles;
     int pepL, pepL_min_def, npep(peptides.size()), nAlleles,
-        CS_up_cpep, cP1, multiAlleleType(0),
-        nRandPep(0), nRandPep_perL, L_core, CS_upper, pepL_max_def,
-        c_L_core, c_CS_upper_def, c_pepL_min_def, c_pepL_max_def;
+        CS_up_cpep, cP1, nRandPep(0), nRandPep_perL, L_core, CS_upper,
+        pepL_max_def, c_L_core, c_CS_upper_def, c_pepL_min_def, c_pepL_max_def;
     /* Peptides shorter than pepL_min_def will have a score of NA.
-        multiAlleleType tells how to combine the scores from multiple alleles
-         (note that we do this separately on the rawScores and percentile
-       scores, i.e. for the percentile, we first compute the percentile per
-       allele and then we possibly do the mean of the percentile scores, instead
-       of first doing the mean of the rawScores to then compute a single global
-         percentile - if we need a global value, we can use the rawScore, it's
-         just not transformed to percentile - this way of doing allows putting
-       all alleles on a similar scale before combining their scores). 0: takes
-       score of the best allele 1: takes harmonic mean of the scores 2: takes
-       geometric mean of the scores. nRandPep is the total number of random
+        nRandPep is the total number of random
        peptides used (will be obtained below), while nRandPep_perL is the
        approximate number of random peptides we'll use per pepL to compute
        score of the current peptides relative to random ones (for longer
@@ -192,7 +187,7 @@ void comp_pepScores(vector<Peptide> &peptides,
 
     // Check first if there are some missing alleles
     for (unsigned int i(0); i < alleles.size();) {
-        if (allele_is_defined(alleles[i], allelesDefFolder)) {
+        if (allele_def_file(alleles[i], allelesDefFolders) != "") {
             i++;
         } else {
             allelesMissing.push_back(alleles[i]);
@@ -204,13 +199,17 @@ void comp_pepScores(vector<Peptide> &peptides,
         tString = allelesMissing[0];
         for (unsigned int i(1); i < allelesMissing.size(); i++)
             tString += ", " + allelesMissing[i];
+        string alleles_def_folers_str("");
+        for (string cFolder : allelesDefFolders) {
+            alleles_def_folers_str += "'" + cFolder + "', ";
+        }
         if (needAllAlleles || (alleles.size() == 0)){
             throw(string("The allele(s) '") + tString + "' aren't defined in " +
-                allelesDefFolder + " - cannot perform the computations.");
+                alleles_def_folers_str + " cannot perform the computations.");
         } else {
             cerr << "Warning: The allele(s) '" << tString
-                << "' aren't defined in " <<  allelesDefFolder 
-                << " - doing the computation on the remaining alleles." << endl;
+                << "' aren't defined in " <<  alleles_def_folers_str
+                << " doing the computation on the remaining alleles." << endl;
         }
     }
     nAlleles = alleles.size();
@@ -220,7 +219,7 @@ void comp_pepScores(vector<Peptide> &peptides,
 
     // Load the parameters of the alleles asked for the predictions.
     vector<int> n_specif(nAlleles);
-    vector<vector<vector<vector<double>>>> PPM(nAlleles);
+    vector<vector<vector<vector<double>>>> PWM(nAlleles);
     vector<map<int, double>> alpha(nAlleles);
     vector<vector<double>> w_k(nAlleles);
     vector<vector<int>> spec_ids(nAlleles);
@@ -230,8 +229,8 @@ void comp_pepScores(vector<Peptide> &peptides,
         directly.
     */
     for (int i(0); i < nAlleles; i++) {
-        get_allele_def(alleles[i], allelesDefFolder, pars::aa_to_ind,
-            n_specif[i], PPM[i], w_k[i], spec_ids[i], alpha[i], w_ks[i],
+        get_allele_def(alleles[i], allelesDefFolders, pars::aa_to_ind,
+            n_specif[i], PWM[i], w_k[i], spec_ids[i], alpha[i], w_ks[i],
             c_pepL_min_def, c_pepL_max_def, c_CS_upper_def, c_L_core);
         
         if (i == 0){
@@ -247,30 +246,24 @@ void comp_pepScores(vector<Peptide> &peptides,
                     "L_core, pepL_min/max or CS_upper.");
             }
         }
-        // Adding the unspec AA to the PPMs (i.e. we consider an average PPM
+        // Adding the unspec AA to the PWMs (i.e. we consider an average PWM
         // for these cases)
         for (int j(0); j < n_specif[i]; j++) {
             for (int l(0); l < L_core; l++) {
-                PPM[i][j][l].push_back(
-                    accumulate(PPM[i][j][l].begin(), PPM[i][j][l].end(), 0.0));
-                PPM[i][j][l].back() /= double(pars::n_aa);
+                PWM[i][j][l].push_back(
+                    accumulate(PWM[i][j][l].begin(), PWM[i][j][l].end(), 0.0));
+                PWM[i][j][l].back() /= double(pars::n_aa);
             }
         }
     }
 
     // Computing the scores from each peptide.
     vector<int> cPep, bestP1_perAllele(nAlleles), best_subspec_perAllele(nAlleles);
-    vector<double> score_perAllele(nAlleles), prctileScore_perA(nAlleles),
-        prctileScore_perL_perA(nAlleles);
-    vector<map<int,double>> a1(nAlleles), b1(nAlleles), b2(nAlleles),
-        p1prctile(nAlleles);
-    // a1, b1, b2, p1prctile are variables used for the transformation between
-    // perctile_perL scores and global perctile scores.
+    vector<double> score_perAllele(nAlleles), prctileScore_perL_perA(nAlleles);
     string cPepSeq, coreSeq;
-    double subScore, sScore, prctileScore, prctileScore_perL,
-        bestAlignScore_main, bestAlignScore_sub, ca, cb, zPrctile,
-        tScore_multiAllele, tScore_multiAllele_perL, tScore_multiAllele_raw;
-    int bestP1_main, bestP1_sub, bestAlleleInd, Lmin, Lmax, nDiffL, prctileInd;
+    double subScore, sScore, prctileScore_perL, bestAlignScore_main,
+        bestAlignScore_sub, ca, cb;
+    int bestP1_main, bestP1_sub, Lmin, Lmax, nDiffL, prctileInd;
     
 
     // First, define some additional variables to load random peptides
@@ -307,38 +300,6 @@ void comp_pepScores(vector<Peptide> &peptides,
         score against random peptides so that we don't always need to call the
         first two dimensions of the rPepScores 'matrix', which can be a bit more
         efficient. */
-
-    if (onlyRawScores) {
-        nRandPep_perL = 0;
-    } else {
-        /* Now define the variables to go from percentile per L to percentile.
-            Need to define these per peptide length. This isn't when only the
-            raw scores are returned. */
-        for (int i(0); i < nAlleles; i++){
-            ca = alpha[i].begin()->second;
-            for (auto calpha : alpha[i]) {
-                if (calpha.second < ca)
-                    ca = calpha.second;
-            }
-            // Used above way to determine the smallest alpha value: it is a
-            // map, so we cannot directly use the min_element function (iterator
-            // points to a pair and we would need to define a function for it).
-            zPrctile = max(80.0, 100. * (1. - 1.0 / (100. - ca)));
-            // zPrctile tells below which prctile value to change the slope of
-            // the lines transforming between prctile_perL and prctile. Either
-            // take the prctile 80 or if due to alpha we have some lines that
-            // have their prctile_perL = 0 with a prctile bigger than that we
-            // use this other value to make sure the prctile score will really
-            // correspond to prctile.
-            for (auto calpha : alpha[i]){
-                b1[i][calpha.first] = 1.0 / (100.0 - calpha.second);
-                a1[i][calpha.first] = 100.0 * (1.0 - b1[i][calpha.first]);
-                p1prctile[i][calpha.first] =
-                    (zPrctile - a1[i][calpha.first]) / b1[i][calpha.first];
-                b2[i][calpha.first] = zPrctile / p1prctile[i][calpha.first];
-            }
-        }
-    }
 
     // Now we first load all the peptides and random peptides into a common
     //  vector (we don't do this anymore directly in the loop of the scores
@@ -400,7 +361,7 @@ void comp_pepScores(vector<Peptide> &peptides,
                 }
                 peptides[p].set_na_score();
                 goto undef_pep_score;
-                /* Some AA not defined in the PPMs is present: this peptide
+                /* Some AA not defined in the PWMs is present: this peptide
                     will have a NA score. */
             } else 
                 cPep[l] = pars::aa_to_ind[cPepSeq[l]];
@@ -413,11 +374,9 @@ void comp_pepScores(vector<Peptide> &peptides,
 
         for (int i(0); i < nAlleles; i++) {
             score_perAllele[i] = 0;
-            prctileScore_perA[i] = 0;
             prctileScore_perL_perA[i] = 0;
             bestAlignScore_main = -1;
             bestP1_main = -1;
-            bestAlleleInd = -1;
             // These values are per allele to determine within each allele where
             // is the best peptide alignment.
             for (int j(0); j < n_specif[i]; j++) {
@@ -451,7 +410,7 @@ void comp_pepScores(vector<Peptide> &peptides,
                         sScore = w_ks[i][j][pepL][s];
                     }
                     for (int l(0); l < L_core; l++) {
-                        sScore *= PPM[i][j][l][cPep[l + cP1]];
+                        sScore *= PWM[i][j][l][cPep[l + cP1]];
                     }
                     subScore += sScore;
                     if (sScore > bestAlignScore_sub) {
@@ -471,7 +430,7 @@ void comp_pepScores(vector<Peptide> &peptides,
                     */
                    subScore = w_k[i][j];
                    for (int l(0); l < L_core; l++) {
-                        subScore *= PPM[i][j][l][cPep[l + bestP1_sub]];
+                        subScore *= PWM[i][j][l][cPep[l + bestP1_sub]];
                     }
                 }
 
@@ -494,144 +453,62 @@ void comp_pepScores(vector<Peptide> &peptides,
             // It is an input peptide, need to save it's score for the output
             // We first need to transform the raw scores to percentile scores to
             // have a comparable scale between the alleles.
-            if (onlyRawScores) {
-                bestAlleleInd = max_element(score_perAllele.begin(),
-                    score_perAllele.end()) - score_perAllele.begin();
-                /* max_element is a pointer to the element with max value from
-                    the given vector, and we removing the start pointer position
-                    this returns the index of this max element. */
-                peptides[p].set_rawScore(score_perAllele[bestAlleleInd]);
-            } else {
-                bestAlleleInd = 0;
-                switch (multiAlleleType){
-                    case 0:
-                        tScore_multiAllele = INFINITY; break;
-                    case 1:
-                        tScore_multiAllele = 0; break;
-                    case 2:
-                        tScore_multiAllele = 1; break;
-                }
-                tScore_multiAllele_perL = tScore_multiAllele_raw = tScore_multiAllele;
-                /* These tScores will be updated based on each allele score.
-                    They need to first be INF for the multiAlleleType == 0 (to
-                    keep only the best score which is lowest value), 0 when
-                    multiAlleleType == 1 (harmonic mean between allele scores),
-                    and need to be 1 when multiAlleleType == 2 (geometric mean). */
-                for (int i(0); i < nAlleles; i++) {
-                    sScore = score_perAllele[i];
+            for (int i(0); i < nAlleles; i++) {
+                sScore = score_perAllele[i];
 
-                    rPepScores_pt = &rPepScores[pepL][i];
+                rPepScores_pt = &rPepScores[pepL][i];
 
-                    if (sScore > rPepScores_pt->back()) {
-                        prctileScore_perL = 100.0 * double(rPepScores_pt->size()) / (rPepScores_pt->size()+1.0);
-                        /* Didn't have any random peptide with a better score
-                            than this peptide. Instead of giving a score of
-                            exactly 100, I multiply by nRand / (nRand+1) to
-                            account for the "precision" of our %Ranks (i.e. this
-                            peptide is likely not the best of best binders but
-                            we cannot distinguish between nearby values and if
-                            adding one extra ranom peptide, maybe this peptide
-                            would have been less good than best random one).
-                            With this a very long peptide that has better score
-                            than all similar length peptide will still show a
-                            less good score than if it had been slightly shorter.
-                            */
+                if (sScore > rPepScores_pt->back()) {
+                    prctileScore_perL = 100.0 * double(rPepScores_pt->size()) / (rPepScores_pt->size()+1.0);
+                    /* Didn't have any random peptide with a better score
+                        than this peptide. Instead of giving a score of
+                        exactly 100, I multiply by nRand / (nRand+1) to
+                        account for the "precision" of our %Ranks (i.e. this
+                        peptide is likely not the best of best binders but
+                        we cannot distinguish between nearby values and if
+                        adding one extra random peptide, maybe this peptide
+                        would have been less good than best random one).
+                        With this a very long peptide that has better score
+                        than all similar length peptide will still show a
+                        less good score than if it had been slightly shorter.
+                        */
+                } else {
+                    prctileInd = 0;
+                    while (sScore > rPepScores_pt->at(prctileInd)) {
+                        prctileInd++;
+                    }
+                    if (prctileInd == 0) {
+                        ca = 0;
                     } else {
-                        prctileInd = 0;
-                        while (sScore > rPepScores_pt->at(prctileInd)) {
-                            prctileInd++;
-                        }
-                        if (prctileInd == 0) {
-                            ca = 0;
-                        } else {
-                            ca = rPepScores_pt->at(prctileInd - 1);
-                        }
-                        cb = rPepScores_pt->at(prctileInd);
-                        prctileScore_perL =
-                            (prctileInd + (sScore - ca) / (cb - ca)) /
-                            (rPepScores_pt->size()+1.0) * 100.0;
-                        /* We use the equation with ca and cb here to linearly
-                             interpolate the percentiles between the values
-                            available from the random peptides, instead of just
-                            using direct threshold values. We divide by nRand+1
-                            for the same reason as above. */
+                        ca = rPepScores_pt->at(prctileInd - 1);
                     }
-
-                    // And transform these percentiles per pepL to global
-                    // percentiles:
-                    if (prctileScore_perL <= p1prctile[i][pepL]) {
-                        prctileScore = b2[i][pepL] * prctileScore_perL;
-                    } else {
-                        prctileScore =
-                            a1[i][pepL] + b1[i][pepL] * prctileScore_perL;
-                    }
-
-                    prctileScore = 100 - prctileScore;
-                    prctileScore_perL = 100 - prctileScore_perL;
-                    /* This is to make the best scores have a value of 0 and
-                        worst binders have a score of 100 - but in my
-                        computations for transforming between perctile_perL to
-                        perctile I was considering best cases had a score of 100.
-                        It was easier to transform like that instead of deriving
-                        again the equations of transformations (which would need
-                        recreating new PPM def files with other alpha values as
-                        well), but in the future it might still be good to also
-                        modify these equations to make 1-2 less computations in
-                        the code.
-                    */
-                    if (prctileScore < 0) {
-                        // Due to rounding of the alpha in the allele def files,
-                        // it sometimes happened that the score was slightly
-                        // negative (like -1e-14), which was an issue in some
-                        // computations (e.g. for the geom mean below the value
-                        // was then NaN instead of saying this peptide was very
-                        // good).
-                        if (prctileScore < -0.01){
-                            throw(string("There was a negative prctileScore ") +
-                                " for '" + cPepSeq + "': " +
-                                to_string(prctileScore));
-                        }
-                        prctileScore = 0;
-                    }
-                    prctileScore_perA[i] = prctileScore;
-                    prctileScore_perL_perA[i] = prctileScore_perL;
-
-                    if (prctileScore < tScore_multiAllele) {
-                        bestAlleleInd = i;
-                        if (multiAlleleType == 0) { // keep only best score
-                            tScore_multiAllele = prctileScore;
-                            tScore_multiAllele_perL = prctileScore_perL;
-                            tScore_multiAllele_raw = sScore;
-                        }
-                    }
-                    if (multiAlleleType == 1) {
-                        tScore_multiAllele += 1.0 / prctileScore;
-                        tScore_multiAllele_perL += 1.0 / prctileScore_perL;
-                        tScore_multiAllele_raw += 1.0 / sScore;
-                    } else if (multiAlleleType == 2) {
-                        tScore_multiAllele *= prctileScore;
-                        tScore_multiAllele_perL *= prctileScore_perL;
-                        tScore_multiAllele_raw *= sScore;
-                    }
+                    cb = rPepScores_pt->at(prctileInd);
+                    prctileScore_perL =
+                        (prctileInd + (sScore - ca) / (cb - ca)) /
+                        (rPepScores_pt->size()+1.0) * 100.0;
+                    /* We use the equation with ca and cb here to linearly
+                            interpolate the percentiles between the values
+                        available from the random peptides, instead of just
+                        using direct threshold values. We divide by nRand+1
+                        for the same reason as above. */
                 }
-                switch (multiAlleleType) {
-                // Finalize the computations for harmonic/geometric means
-                case 1: // Harmonic mean
-                    tScore_multiAllele = double(nAlleles) / tScore_multiAllele;
-                    tScore_multiAllele_perL = double(nAlleles) / tScore_multiAllele_perL;
-                    tScore_multiAllele_raw = double(nAlleles) / tScore_multiAllele_raw;
-                    break;
-                case 2: // Geometric mean
-                    tScore_multiAllele = pow(tScore_multiAllele, 1.0 / double(nAlleles));
-                    tScore_multiAllele_perL =
-                        pow(tScore_multiAllele_perL, 1.0 / double(nAlleles));
-                    tScore_multiAllele_raw =
-                        pow(tScore_multiAllele_raw, 1.0 / double(nAlleles));
-                    break;
-                }
-                peptides[p].set_PPM_res(prctileScore_perL_perA, bestP1_perAllele,
-                    best_subspec_perAllele);
+
+                prctileScore_perL = 100 - prctileScore_perL;
+                /* This is to make the best scores have a value of 0 and
+                    worst binders have a score of 100 - but in my
+                    computations for transforming between perctile_perL to
+                    perctile I was considering best cases had a score of 100.
+                    It was easier to transform like that instead of deriving
+                    again the equations of transformations (which would need
+                    recreating new PWM def files with other alpha values as
+                    well), but in the future it might still be good to also
+                    modify these equations to make 1-2 less computations in
+                    the code.
+                */
+                prctileScore_perL_perA[i] = prctileScore_perL;
             }
+            peptides[p].set_PWM_res(prctileScore_perL_perA, score_perAllele,
+                bestP1_perAllele, best_subspec_perAllele);
         } else { // The peptide was a random peptide
             for (int i(0); i < nAlleles; i++) {
                 rPepScores[pepL][i][pRand] = score_perAllele[i];
@@ -656,8 +533,8 @@ void comp_pepScores(vector<Peptide> &peptides,
 }
 
 void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
-    bool noContext) {
-    int bestInd;
+    bool noContext, bool print_extra_results) {
+    int bestInd, n_NA;
     const vector<double> *score_perAllele_pt;
     // A pointer to the scores, for easier reuse below.
     outStream << "Peptide\tContext\tBestAllele\t%Rank_best\tCore_best\tCoreP1_best\tSubSpec_best";
@@ -665,6 +542,18 @@ void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
     for (auto cAllele : pars::alleles) {
         outStream << "\t%Rank_" << cAllele << "\tCoreP1_" << cAllele
                  << "\tSubSpec_" << cAllele;
+    }
+    n_NA = 5 + 3 * pars::alleles.size();
+    // Tells number of NA values to use for peptides that couldn't be scored.
+
+    if (print_extra_results) {
+        for (auto cAllele : pars::alleles) {
+            outStream << "\tScore_" << cAllele << "\t%RankPWM_" << cAllele
+                << "\tScorePWM_" << cAllele;
+        }
+        /* When this info is asked we add it after the usual columns so that
+            a script that would be based on column indices would still work. */
+        n_NA += 3 * pars::alleles.size();
     }
     outStream << endl;
 
@@ -699,8 +588,16 @@ void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
                           << "\t" << cPep.get_P1()[i] + 1
                           << "\t" << cPep.get_subSpec_ID()[i];
             }
+            if (print_extra_results){
+                for (size_t i(0); i < pars::alleles.size(); i++) {
+                    outStream
+                        << "\t" << setprecision(3) << cPep.get_nnetsScore(i)
+                        << "\t" << setprecision(3) << cPep.get_PWMrank_L(i)
+                        << "\t" << setprecision(3) << cPep.get_PWMscore(i);
+                }
+            }
         } else {
-            for (size_t i(0); i < 5 + 3 * pars::alleles.size(); i++) {
+            for (size_t i(0); i < n_NA; i++) {
                 outStream << "\tNA";
                 /* Repeat NA values the number of times needed to have same
                  * size than for the peptides that get scored. */
@@ -709,3 +606,5 @@ void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
         outStream << endl;
     }
 }
+
+

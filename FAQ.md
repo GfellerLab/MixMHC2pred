@@ -5,11 +5,11 @@
 MixMHC2pred is a predictor of MHC-II ligands displayed at the cell surface.
 It combines predictions of affinity to MHC-II molecules together with other
 features linked to antigen processing and presentation. It can work for any
-human MHC-II allele (HLA-DR/-DP/-DQ) as well as for many mouse, cattle and
-chicken alleles.
+human MHC-II allele (HLA-DR/-DP/-DQ) as well as for many alleles from
+other species.
 
-Peptides ranking high in MixMHC2pred predictions are more likely to elicit
-CD4+ T cell recognition.
+Peptides with lower %Ranks in MixMHC2pred predictions are more likely to
+elicit CD4+ T cell recognition
 
 ## How should I interpret the output of MixMHC2pred
 
@@ -17,16 +17,16 @@ CD4+ T cell recognition.
   context), in the same order as provided in input.
 * *BestAllele* gives the name of the best allele (based
   on the allele with best predicted score for the given peptide).
-* *%Rank_...* give the predicted score for the best allele and separately for
-  each allele asked. The score is given as a percentile rank (i.e., the
-  percent of random peptides that  would have a score higher than the peptide
-  provided in input among peptides of sizes 12-21 amino acids; best score is
-  about 0, worst score is 100).
+* *%Rank_...* give the predicted score for the best allele and for each allele
+  asked. The score is given as a percentile rank, best score is about 0, worst
+  score is 100. This value corresponds to the percent of random peptides that
+  would have a better score than the peptide provided in input among peptides of
+  sizes 12-21 amino acids.
 * *Core_best* indicates the best predicted core binding sequence for each
   peptide towards its best allele.
 * *CoreP1_...* give the most likely binding core position for the given peptide
-  towards the allele (this tells the position of the first amino acid from the
-  binding core (which has a size of 9 aa in the predictions), starting at a
+  towards the given allele (this tells the position of the first amino acid from
+  the binding core (which has a size of 9 aa in the predictions), starting at a
   value of 1 (i.e. if binding core corresponds to the 9 first amino acids
   from the peptide, this *CoreP1 = 1*)).
 * *subSpec_...* tell in which sub-specificity the given peptide

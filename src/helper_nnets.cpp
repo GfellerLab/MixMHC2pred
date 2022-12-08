@@ -211,7 +211,7 @@ void pred_neural_networks(string nnetsDefFile, vector<string> alleles,
     size_t nPep(Peptides.size());
     int cP1;
     double log_min, cRank, pRank_T;
-    vector<double> PPM_range, rank_thr;
+    vector<double> PWM_range, rank_thr;
     vector<int> pepL_range, P1_range;
     vector<string> nn_in_var;
     vector<vector<vector<double>>> nnetsWeights;
@@ -220,15 +220,15 @@ void pred_neural_networks(string nnetsDefFile, vector<string> alleles,
     map<int, double> f_L;
 
     // Getting the weights implemented in the current nnets.
-    get_nnets_def(nnetsDefFile, PPM_range, pepL_range, P1_range, log_min,
+    get_nnets_def(nnetsDefFile, PWM_range, pepL_range, P1_range, log_min,
         nn_in_var, nnetsWeights, nnetsBiases, rank_thr, sc_thr,
         pRank_T, f_L, noContext);
     
     // Defining the variables that'll be used for the nn-encoding.
     vector<string> pepBords;
     pepBords.resize(nPep);
-    valWithRange<double> scores("PWM_log", log(PPM_range[0] + log_min),
-                                log(PPM_range[1] + log_min), nPep);
+    valWithRange<double> scores("PWM_log", log(PWM_range[0] + log_min),
+                                log(PWM_range[1] + log_min), nPep);
     vector<valWithRange<int>> one_hot;
     one_hot.push_back(
         valWithRange<int>("pepL", pepL_range[0], pepL_range[1], nPep));
@@ -237,7 +237,7 @@ void pred_neural_networks(string nnetsDefFile, vector<string> alleles,
     for (size_t Aind(0); Aind < alleles.size(); Aind++){
         // Repeat the computation for each allele separately.
         for (size_t i(0); i < nPep; i++) {
-            scores[i] = log(Peptides[i].get_PPMrank_L()[Aind] + log_min);
+            scores[i] = log(Peptides[i].get_PWMrank_L(Aind) + log_min);
             pepBords[i] = Peptides[i].getContext();
             one_hot[0][i] = Peptides[i].get_pepL();
 
@@ -277,7 +277,7 @@ void pred_neural_networks(string nnetsDefFile, vector<string> alleles,
                 cRank = transf_toPrank(1.0 - nn_in[i][0],
                     Peptides[i].get_pepL(), rank_thr,
                     sc_thr, pRank_T, f_L);
-                Peptides[i].set_nnets_rank(cRank, Aind);
+                Peptides[i].set_nnets_rank(cRank, nn_in[i][0], Aind);
             } else {
                 Peptides[i].set_na_score();
             }

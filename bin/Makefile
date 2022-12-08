@@ -1,4 +1,4 @@
-CPPFLAGS = -std=gnu++11
+CPPFLAGS = -std=gnu++17
 CPPFLAGS += -O3
 # Add some compilation instructions here.
 # -O2 for optimisation of level 2; -O3 for even higher optimisation

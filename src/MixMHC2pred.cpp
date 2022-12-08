@@ -21,6 +21,8 @@
 using namespace std;
 
 int main(int argc, const char *argv[]) {
+    pars::version = "2.0.2";
+
     // Define the options that can be passed to the program
 	ArgumentParser parser;
 	parser.addArgument("-i", "--input", 1, false);
@@ -28,14 +30,20 @@ int main(int argc, const char *argv[]) {
     parser.addArgument("-a", "--alleles", '+', false);
     // parser.addArgument("-s", "--ws_scoring", 1); // Not making this an option anymore
     parser.addArgument("--no_context", 0);
-    parser.addArgument("-f", "--allelesFolder", 1);
+    parser.addArgument("-f", "--allelesFolder", '+');
+    parser.addArgument("-e", "--extra_out", 0);
+    parser.addHiddenArgument("--ignore_version", '*');
+    /* ignore_version is used to avoid checking that the PWMdef file
+        corresponds to pars::version. This is an advanced argument used for
+        testing different PWM def files and it should not be used in the
+        standard case, this is why it is hidden. It can be given with a value
+        to replace the version name by this value. */
     // parser.addArgument("--allowPredWithMissingAlleles", 0);
 
-    vector<string> alleles;
-    string pepFile, oFile, rPepFolder, execFolder, allelesDefFolder("full"),
-        nnetsDefRoot("nnetsWeights"), nnetsDefFile, contextType("full"),
-        version("v2.0");
-    bool needAllAlleles, onlyRawScores(false), noContext;
+    vector<string> alleles, allelesDefFolders = {"default"};
+    string pepFile, oFile, rPepFolder, execFolder,
+        nnetsDefRoot("nnetsWeights"), nnetsDefFile, contextType("full");
+    bool needAllAlleles, noContext, print_extra_results;
     int ws_scoring(1);
 
 	
@@ -49,10 +57,20 @@ int main(int argc, const char *argv[]) {
     // if (parser.exists("ws_scoring"))
     //     ws_scoring = stoi(parser.retrieve<string>("ws_scoring"));
     if (parser.exists("allelesFolder")){
-        allelesDefFolder = parser.retrieve<string>("allelesFolder");
+        allelesDefFolders = parser.retrieve<vector<string>>("allelesFolder");
     }
+    print_extra_results = parser.exists("extra_out");
 
     try {
+        pars::ignore_version = parser.exists("ignore_version");
+        if (pars::ignore_version && (parser.count("ignore_version") >= 1)){
+            pars::version = parser.retrieve<vector<string>>("ignore_version")[0];
+            if (parser.count("ignore_version") > 1){
+                throw(string("'ignore_version' was given with more than 1 ") +
+                    "argument.");
+            }
+        }
+
         if (noContext){
             contextType = "none";
         }
@@ -61,7 +79,7 @@ int main(int argc, const char *argv[]) {
         ws_scoring != 3 && ws_scoring != 4)
             throw(string("ws_scoring can only take values 0,1,2,3 and 4"));
 
-        std::cout << "Runing MixMHC2pred (" << version
+        std::cout << "Runing MixMHC2pred (v" << pars::version
              << ") for peptide file: " << pepFile << endl;
 
         vector<Peptide> peptides;
@@ -87,31 +105,37 @@ int main(int argc, const char *argv[]) {
                   " MixMHC2pred. It is maybe not in a standard location.");
         }
 
-        if (allelesDefFolder == "full") {
-            allelesDefFolder = execFolder + "/PWMdef/";
-        } else {
-            allelesDefFolder += "/";
+        // Possibly redefine the path to the alleles definition folders:
+        for (string &cFolder : allelesDefFolders) {
+            if (cFolder == "default") {
+                cFolder = execFolder + "/PWMdef/";
+            } else if (cFolder.substr(0, 5) == "exec:") {
+                cFolder =
+                    execFolder + "/" + cFolder.substr(5) + "/";
+            } else {
+                cFolder += "/";
+                // Make sure path ends with a '/'.
+            }
         }
+
         rPepFolder = execFolder + "/rpep/";
         // Loading the peptides and computing their scores.
         pepData_import(pepFile, peptides, pepL_used, contextType, alleles.size());
         std::cout << "Imported " << peptides.size() << " peptides." << flush;
 
-        std::cout << " Computing now the PPM-based scores from each peptide." << endl;
+        std::cout << " Computing now the PWM-based scores from each peptide." << endl;
 
-        // First get the PPMs-scores. We redefine some variables based on what
+        // First get the PWMs-scores. We redefine some variables based on what
         // is now always used for the nnets (!!! will soon delete these, but
         // still kept for the moment).
-        onlyRawScores = false;
         ws_scoring = 1;
         needAllAlleles = true;
         /* !!! Will need to update the way to treat needAllAlleles - currently
             with the nnets, I always force this to true.
             */
         pars::alleles = alleles;
-        comp_pepScores(peptides, onlyRawScores,
-                       ws_scoring, needAllAlleles, rPepFolder,
-                       pepL_used, allelesDefFolder);
+        comp_pepScores(peptides, ws_scoring, needAllAlleles, rPepFolder,
+                       pepL_used, allelesDefFolders);
         std::cout << "Computing now the full scores from each peptide." << endl;
         for (size_t c_nnet(1); c_nnet <= pars::n_nnets; c_nnet++){
             nnetsDefFile = execFolder + "/nnetsDef/" + nnetsDefRoot + "_"
@@ -122,16 +146,27 @@ int main(int argc, const char *argv[]) {
 
         // Making first the header from the results file
         ofstream outStream(oFile);
-        outStream << string(20, '#') << "\n# Output from MixMHC2pred ("
-            << version << ")" << endl
+        outStream << string(20, '#') << "\n# Output from MixMHC2pred (v"
+            << pars::version << ")" << endl
                   << "# Input file: " << pepFile << endl
                   << "# Alleles: ";
         for (string cAllele : alleles) {
             outStream << cAllele << ", ";
         }
         outStream.seekp(-2, ios_base::cur);  // Remove ', ' from the end of outStream.
-        outStream << "\n# Alleles folder: " << allelesDefFolder
-            << "\n# Context type: " << contextType
+        outStream << "\n# Alleles folder: ";
+        for (string cFolder : allelesDefFolders){
+            if (cFolder.substr(0, execFolder.size()) == execFolder){
+                cFolder = "exec:" + cFolder.substr(execFolder.size());
+                /* When folder based on path to executable, we replace this path
+                    to make it shorter. */
+            }
+            outStream << "'" << cFolder << "'";
+            if (cFolder != allelesDefFolders.back()){
+                outStream << "; ";
+            }
+        }
+        outStream << "\n# Context type: " << contextType
             << "\n#\n# MixMHC2pred is freely available for academic users." << endl
             << "# Private companies should contact nbulgin@lcr.org "
             << "at the Ludwig Institute\n#  for Cancer Research Ltd "
@@ -145,9 +180,9 @@ int main(int argc, const char *argv[]) {
             << "Biotechnol. 37, 1283-1286 (2019).\n#\n" << string(20, '#')
             << endl;
 
-             
+        printPepResults(outStream, peptides, noContext, print_extra_results);
 
-        printPepResults(outStream, peptides, noContext);
+    
         std::cout << "Finished the computations." << endl;
 
     } catch(string& errMsg){

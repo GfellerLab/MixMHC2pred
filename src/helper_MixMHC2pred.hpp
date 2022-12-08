@@ -36,6 +36,8 @@ public:
     static map< char, vector<double> > blo_plus_1;
     static vector<char> blosumColumns;
     static vector<string> alleles;
+    static string version;
+    static bool ignore_version;
 	/* 
          context_L is the number of AA per "part of the context" (i.e. # before
             N-term, # just after it, # just before C-term and # just after it),
@@ -44,16 +46,18 @@ public:
             only the 'true' AA, i.e. without the allowed unknown AA (X) or gap
             symbol (-).
         n_nnets is the number of nnets repetitions that have been used.
-        aa_to_ind is used in the PPM-based computations to know which row of
-            the PPM to use in function of which is the current AA (for both
-            X and '-' we'll add an extra row to the PPM corresponding to an
+        aa_to_ind is used in the PWM-based computations to know which row of
+            the PWM to use in function of which is the current AA (for both
+            X and '-' we'll add an extra row to the PWM corresponding to an
             average value).
         blo_plus_1 is the blosum62 + one-hot transformation matrix, given as a map, so that
             we can call blo_plus_1["F"] for example to have all elements to encode
             this F AA in blosum.
         blosumColumns tells which AAs are present in the 'columns' of this
             blo_plus_1 matrix (it includes the true AAs and the gap).
-        alleles gives the list of alleles asked in the input.       
+        alleles gives the list of alleles asked in the input.
+        version stores the current version number of MixMHC2pred.
+        ignore_version is used to avoid checking correct version number.
 	 */
 private:
 	pars(){}
@@ -75,30 +79,30 @@ class Peptide {
     const vector< int >& get_P1() const;
     int get_P1_centered(int Aind) const;
     const vector< int >& get_subSpec_ID() const;
-    const vector< double >& get_PPMrank_L() const;
     const vector< double >& get_nnets_rank() const;
+    double get_PWMrank_L(int Aind) const;
+    double get_PWMscore(int Aind) const;
+    double get_nnetsScore(int Aind) const;
 
-    void set_rawScore(double score);
-    /* To update the pepScoresRaw. */
-    void set_PPM_res(const vector< double > &PPMrank_L, const vector< int > &P1,
+    void set_PWM_res(const vector< double > &PWMrank_L,
+        const vector< double > &PWMrawScore, const vector< int > &P1,
         const vector< int > &best_subSpec_ids);
-    void set_nnets_rank(double c_nnets_rank, int allele_ind);
+    void set_nnets_rank(double c_nnets_rank, double c_nnets_raw, int allele_ind);
     void set_na_score();
     const bool na_score();
 
 
   protected:
     string sequence, pepCon;
-    double pepScoreRaw;
-    /* pepScoreRaw is temp kept but not really used anymore within the peptide.
-        PPMrank_L is the peptide %rank_perL after doing the part of the PPMs,
-            which is used as input in the 2nd neural network.
-    */
-   vector<int> P1, best_subSpec_ids;
-   // best_subSpec_ids tells which is the best sub-specificity ID per allele.
-   vector< double > nnets_rank, PPMrank_L;
-   bool score_isNA;
-   // Tells that the peptide couldn't get its score (e.g. bad size or bad AA)
+    vector<int> P1, best_subSpec_ids;
+    // best_subSpec_ids tells which is the best sub-specificity ID per allele.
+    vector<double> nnets_rank, nnets_rawScore, PWMrank_L, PWMrawScore;
+    /* nnets_rank is the %Rank after the nnets, PWMrank_L is the peptide
+        %Rank_perL after doing the part of the PWMs (which is used as input in
+        the 2nd neural network) and the ..._rawScores are before %Rank
+        transformations). */
+    bool score_isNA;
+    // Tells that the peptide couldn't get its score (e.g. bad size or bad AA)
 };
 
 void pepData_import(string pepFile, vector<Peptide> &peptides,
@@ -108,15 +112,14 @@ void pepData_import(string pepFile, vector<Peptide> &peptides,
  to only do random computations against these ones.*/
 
 void comp_pepScores(vector<Peptide> &peptides,
-                    bool onlyRawScores,
                     int ws_scoring, bool needAllAlleles,
                     string rpepFolder, set<int> &pepL_used,
-                    string allelesDefFolder);
+                    const vector<string> &allelesDefFolders);
 /* This is the main function called to compute the scores of the peptides.
     This scores are directly updated in the 'peptides'. */
 
 void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
-    bool noContext);
+    bool noContext, bool print_extra_results);
 /* Print into the outStream the score, core binding region and other
     information from the current peptide. */
 
@@ -138,30 +141,38 @@ inline const vector< int >& Peptide::get_P1() const {
 inline const vector< int >& Peptide::get_subSpec_ID() const {
     return best_subSpec_ids;
 }
-inline const vector< double >& Peptide::get_PPMrank_L() const{
-    return PPMrank_L;
-}
 inline const vector< double >& Peptide::get_nnets_rank() const{
     return nnets_rank;
 }
-inline void Peptide::set_PPM_res(const vector< double > &c_PPMrank_L,
-    const vector< int > &cP1, const vector< int > &c_best_subSpec_ids){
-    PPMrank_L = c_PPMrank_L;
-    P1 = cP1; // These indices start at 0 (aren't centered values).
-    best_subSpec_ids = c_best_subSpec_ids;
-    nnets_rank.resize(PPMrank_L.size());
+inline double Peptide::get_PWMrank_L(int Aind) const{
+    return PWMrank_L[Aind];
+}
+inline double Peptide::get_PWMscore(int Aind) const{
+    return PWMrawScore[Aind];
+}
+inline double Peptide::get_nnetsScore(int Aind) const{
+    return nnets_rawScore[Aind];
 }
 
-inline void Peptide::set_nnets_rank(double c_nnets_rank, int allele_ind){
+inline void Peptide::set_PWM_res(const vector< double > &c_PWMrank_L,
+    const vector< double > &c_PWMrawScore, const vector< int > &cP1,
+    const vector< int > &c_best_subSpec_ids){
+    PWMrank_L = c_PWMrank_L;
+    PWMrawScore = c_PWMrawScore;
+    P1 = cP1; // These indices start at 0 (aren't centered values).
+    best_subSpec_ids = c_best_subSpec_ids;
+    nnets_rank.resize(PWMrank_L.size());
+}
+
+inline void Peptide::set_nnets_rank(double c_nnets_rank, double c_nnets_raw,
+    int allele_ind){
     nnets_rank[allele_ind] += c_nnets_rank / double(pars::n_nnets);
+    nnets_rawScore[allele_ind] += c_nnets_raw / double(pars::n_nnets);
     /* Each nnets repetition will contribute to a fraction of the score (i.e.
         the final result corresponds to the average ranks of the different
         repetitions). */
 }
 
-inline void Peptide::set_rawScore(double score) {
-    pepScoreRaw = score;
-}
 inline void Peptide::set_na_score() {
     score_isNA = true;
 }

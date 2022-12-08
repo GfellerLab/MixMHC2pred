@@ -6,22 +6,33 @@
 #include "helper_MixMHC2pred.hpp"
 
 
-bool allele_is_defined(string cAllele, string allelesDefFolder){
-    ifstream alleleFile(allelesDefFolder + cAllele + ".txt");
-    return (alleleFile.good());
+string allele_def_file(string cAllele, const vector<string> &allelesDefFolders){
+    int i(0);
+    string cFile;
+    while(i < allelesDefFolders.size()){
+        cFile = allelesDefFolders[i] + cAllele + ".txt";
+        ifstream alleleFile(cFile);
+        if (alleleFile.is_open()){
+            return(cFile);
+        } else {
+            i++;
+        }
+    }
+    // Didn't find the allele, otherwise the function would have returned.
+    return ("");
 }
 
-void get_allele_def(string cAllele, string allelesDefFolder,
+void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
     const map<char, int> &aa_to_ind, int &c_n_specif,
-    vector<vector<vector<double>>> &c_PPM, vector<double> &c_w_k,
+    vector<vector<vector<double>>> &c_PWM, vector<double> &c_w_k,
     vector<int> &c_spec_id, map<int, double> &c_alpha,
     vector<map<int, map<int, double>>> &c_w_ks,
     int &pepL_min_def, int &pepL_max_def, int &CS_upper_def, int &L_core) {
     
     vector< map<int, map<int, double>>> w_s;
-    bool CS_perL(false);
+    bool CS_perL;
     int x;
-    string cAlleleFile(allelesDefFolder + cAllele + ".txt"), trash;
+    string cAlleleFile(allele_def_file(cAllele, allelesDefFolders)), trash;
     ifstream alleleFile(cAlleleFile);
     char cAA;
     vector< int > x_vect;
@@ -29,9 +40,22 @@ void get_allele_def(string cAllele, string allelesDefFolder,
     if (alleleFile.fail()){
         throw(string("Couldn't open allele definition: \n") + cAlleleFile);
     }
-    alleleFile >> trash >> trash; // Name of allele
-    alleleFile >> trash >> trash;      // Type of predictor definition
-    alleleFile >> trash >> c_n_specif;
+    alleleFile >> trash >> trash;
+    /* Name of allele (the name is already in file name, we don't check it in
+        case the user had renamed its alleles in user-defined allele files). */
+    alleleFile >> trash >> trash; // Version number
+    if ((!pars::ignore_version) && (trash != pars::version)){
+        throw(string("Running MixMHC2pred v" + pars::version +
+            " but allele definition file of " + cAllele + " (" +
+            cAlleleFile + ") is version " + trash +
+            ".\nPlease download new allele definition files."));
+    }
+    /* There are then some lines that aren't used ('Type', also the allele
+        sequence when PWM build on user sequence) */
+    while (trash != "n_specificities") {
+        alleleFile >> trash;
+    }
+    alleleFile  >> c_n_specif;
     // Get w_k values:
     alleleFile >> trash; // npep_u text
     c_w_k = vector<double>(c_n_specif);
@@ -42,56 +66,38 @@ void get_allele_def(string cAllele, string allelesDefFolder,
     for (int j(0); j < c_n_specif; j++) {
         c_w_k[j] = c_w_k[j] / npep_subSpec_tot;
     }
-    // There is first e.g. the line for npep_t that isn't used.
-        while ((trash != "L_core") && (trash != "spec_ids")) {
-            alleleFile >> trash;  
-        }
+    // There are then some lines that aren't used (e.g. npep_t)
+    while (trash != "spec_ids") {
+        alleleFile >> trash;  
+    }
     c_spec_id = vector<int>(c_n_specif);
-    if (trash == "spec_ids"){
-        for (int j(0); j < c_n_specif; j++) {
-            alleleFile >> c_spec_id[j];
-        }
-    } else {
-        cerr << "#######\n#######\nWarning, spec_ids wasn't found in the "
-            << "PPM definition for " << cAllele
-            << " will assume all sub-spec are forward binders." << endl;
-        for (int j(0); j < c_n_specif; j++) {
-            c_spec_id[j] = j+1;
-        }
+    for (int j(0); j < c_n_specif; j++) {
+        alleleFile >> c_spec_id[j];
     }
-
-    /* Next information are some information that we assume to be the
-        same between all alleles and don't re-read everything for the moment
-        as these definition files will likely change in a near future as
-        needed for the pan-specific predictor.  */
-    while (trash != "L_core") {
+    alleleFile >> trash >> L_core;
+    while (trash != "CS_perL") {
         alleleFile >> trash;  
     }
-    alleleFile >> L_core;
-    do {
+    alleleFile >> trash;
+    CS_perL = (trash == "1");
+    /* Next lines are not used (e.g. pepL_lower/upper obtained later, n_diff_aa
+        assumed to be the same for all alleles).
+    */
+    while (trash != "PWM_norm.1") {
         alleleFile >> trash;  
-    } while((trash != "CS_perL") && (trash != "Core_shift_upper"));
-    if (trash == "CS_perL"){
-        /* The older definition files didn't include CS_perL header and
-            didn't define the CS per peptide length. */
-        alleleFile >> trash;
-        CS_perL = (trash == "1");
     }
-    do {
-        alleleFile >> trash;
-    } while (trash != "PWM_norm.1");
 
-    // Get the PPM sub specificities
-    c_PPM = vector<vector<vector<double>>>(
+    // Get the PWM sub specificities
+    c_PWM = vector<vector<vector<double>>>(
         c_n_specif,
         vector<vector<double>>(L_core, vector<double>(pars::n_aa, 0.0)));
     for (int j(0); j < c_n_specif; j++) {
         alleleFile >> trash;
-        getline(alleleFile, trash); // PPM 'header'
+        getline(alleleFile, trash); // PWM 'header'
         for (int k(0); k < pars::n_aa; k++) {
             alleleFile >> cAA; // The name of the aa
             for (int l(0); l < L_core; l++) {
-                alleleFile >> c_PPM[j][l].at(aa_to_ind.at(cAA));
+                alleleFile >> c_PWM[j][l].at(aa_to_ind.at(cAA));
                 // In the def file, the columns correspond to positions and
                 // rows to different aa.
             }
@@ -173,7 +179,7 @@ void get_allele_def(string cAllele, string allelesDefFolder,
     }
 }
 
-void get_nnets_def(string nnetsDefFile, vector<double> &PPM_range,
+void get_nnets_def(string nnetsDefFile, vector<double> &PWM_range,
     vector<int> &pepL_range, vector<int> &P1_range, double &log_min,
     vector<string> &nn_in_var, vector<vector<vector<double>>> &nnetsWeights,
     vector<vector<double>> &nnetsBiases, vector<double> &rank_thr,
@@ -191,10 +197,10 @@ void get_nnets_def(string nnetsDefFile, vector<double> &PPM_range,
     /* We'll read the nnets params from the given definition file. cStr are the
         "header" telling what is the next data in the definition file.
     */
-    PPM_range.resize(2);
+    PWM_range.resize(2);
     pepL_range.resize(2);
     P1_range.resize(2);
-    nnetsDef >> cStr >> PPM_range[0] >> PPM_range[1];
+    nnetsDef >> cStr >> PWM_range[0] >> PWM_range[1];
     if (cStr != "PWM_range") {
         throw(string("Expecting 'PWM_range' in the nnetsDefFile ") +
               nnetsDefFile + " but read '" + cStr + "'.");
