@@ -230,8 +230,8 @@ MixMHC2pred can be used freely by academic groups for non-commercial purposes
 
 **FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 2.0) or any data
 provided with the script in any for-profit application, you are required to
-obtain a separate license. To do so, please contact <nbulgin@lcr.org> at the
-Ludwig Institute for Cancer Research Ltd.
+obtain a separate license. To do so, please contact Nadette Bulgin
+(<nbulgin@lcr.org>) at the Ludwig Institute for Cancer Research Ltd.
 
 ## Contact information
 

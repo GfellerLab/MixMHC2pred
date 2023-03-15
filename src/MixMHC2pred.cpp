@@ -168,7 +168,7 @@ int main(int argc, const char *argv[]) {
         }
         outStream << "\n# Context type: " << contextType
             << "\n#\n# MixMHC2pred is freely available for academic users." << endl
-            << "# Private companies should contact nbulgin@lcr.org "
+            << "# Private companies should contact Nadette Bulgin (nbulgin@lcr.org) "
             << "at the Ludwig Institute\n#  for Cancer Research Ltd "
             << "for commercial licenses.\n#" << endl
             << "# To cite MixMHC2pred, please refer to:" << endl

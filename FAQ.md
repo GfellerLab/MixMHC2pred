@@ -49,8 +49,8 @@ scores.
 ## Can I use MixMHC2pred for commercial purposes
 
 If you plan to use MixMHC2pred for commercial purposes, you are required to
-obtain a separate license. To do so, please contact <nbulgin@lcr.org>
-at the Ludwig Institute for Cancer Research Ltd.
+obtain a separate license. To do so, please contact Nadette Bulgin
+(<nbulgin@lcr.org>) at the Ludwig Institute for Cancer Research Ltd.
 
 ## Who should I contact in case of a technical or other issue
 

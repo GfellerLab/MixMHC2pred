@@ -6,7 +6,7 @@
 # Context type: full
 #
 # MixMHC2pred is freely available for academic users.
-# Private companies should contact nbulgin@lcr.org at the Ludwig Institute
+# Private companies should contact Nadette Bulgin (nbulgin@lcr.org) at the Ludwig Institute
 #  for Cancer Research Ltd for commercial licenses.
 #
 # To cite MixMHC2pred, please refer to:
