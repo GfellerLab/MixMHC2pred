@@ -3,8 +3,8 @@
 MixMHC2pred is a pan-allele predictor of MHC class II ligands and epitopes.
 It is described in:  
 Racle, J., et al., Machine learning predictions of MHC-II specificities reveal
-alternative binding mode of class II epitopes. *bioRxiv* (2022)
-(available [here](https://doi.org/10.1101/2022.06.26.497561)).
+alternative binding mode of class II epitopes. *Immunity* (2023)
+(available [here](https://doi.org/10.1016/j.immuni.2023.03.009)).
 
 and
 
@@ -245,8 +245,8 @@ For license-related questions, please contact Nadette Bulgin
 To cite MixMHC2pred, please refer to:
 
 Racle, J., et al., Machine learning predictions of MHC-II specificities reveal
-alternative binding mode of class II epitopes. *bioRxiv* (2022)
-(available [here](https://doi.org/10.1101/2022.06.26.497561)).
+alternative binding mode of class II epitopes. *Immunity* (2023)
+(available [here](https://doi.org/10.1016/j.immuni.2023.03.009)).
 
 and
 

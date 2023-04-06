@@ -174,7 +174,7 @@ int main(int argc, const char *argv[]) {
             << "# To cite MixMHC2pred, please refer to:" << endl
             << "# Racle, J., et al., Machine learning predictions of MHC-II "
             << "specificities\n#  reveal alternative binding mode of class II "
-            << "epitopes. bioRxiv (2022).\n# and\n"
+            << "epitopes. Immunity (2023).\n# and\n"
             << "# Racle, J., et al. Robust prediction of HLA class II epitopes "
             << "by deep motif\n#  deconvolution of immunopeptidomes. Nat. "
             << "Biotechnol. 37, 1283-1286 (2019).\n#\n" << string(20, '#')
