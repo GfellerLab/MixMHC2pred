@@ -119,7 +119,7 @@ void comp_pepScores(vector<Peptide> &peptides,
     This scores are directly updated in the 'peptides'. */
 
 void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
-    bool noContext, bool print_extra_results);
+    bool noContext, bool print_extra_results, bool print_headerRow);
 /* Print into the outStream the score, core binding region and other
     information from the current peptide. */
 

@@ -15,7 +15,7 @@
 // ***** Class of pars containing parameter values to use as global variables.
 /* Definintion of the default parameter values. */
 vector<string> pars::alleles;
-string pars::version;
+string pars::version = "Undefined";
 bool pars::ignore_version;
 size_t pars::context_L = 3, pars::n_aa = 20, pars::L_core = 9, pars::n_nnets = 5;
 map<char, int> pars::aa_to_ind = { {'A', 0}, {'C', 1}, {'D', 2}, {'E', 3}, {'F', 4}, {'G', 5}, {'H', 6}, {'I', 7}, {'K', 8}, {'L', 9}, {'M', 10}, {'N', 11}, {'P', 12}, {'Q', 13}, {'R', 14}, {'S', 15}, {'T', 16}, {'V', 17}, {'W', 18}, {'Y', 19}, {'X', 20}, {'-', 20} };
@@ -43,7 +43,7 @@ map< char, vector<double> > pars::blo_plus_1 = {
 	{'W', vector<double>{ 0.0303, 0.0076, 0.0152, 0.0227, 0.0606, 0.0303, 0.0152, 0.0303, 0.0227, 0.053, 0.0152, 0.0152, 0.0076, 0.0152, 0.0227, 0.0227, 0.0227, 0.0303, 1.4924, 0.0682, 0} },
 	{'Y', vector<double>{ 0.0405, 0.0093, 0.0187, 0.028, 0.1308, 0.0249, 0.0467, 0.0436, 0.0312, 0.0685, 0.0187, 0.0218, 0.0156, 0.0218, 0.028, 0.0312, 0.028, 0.0467, 0.028, 1.3179, 0} },
 	{'-', vector<double>{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2} },
-	{'X', vector<double>{ 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476, 0.0476} } };
+	{'X', vector<double>{ 0.111, 0.0816, 0.0975, 0.0993, 0.0954, 0.1069, 0.0814, 0.1034, 0.1016, 0.1273, 0.0727, 0.0917, 0.089, 0.083, 0.0968, 0.1002, 0.0945, 0.1078, 0.0776, 0.0861, 0.0952} } };
 
 // ***** Class of Peptide
 Peptide::Peptide(int nAlleles, string seq, string context, bool innerContext)
@@ -533,29 +533,33 @@ void comp_pepScores(vector<Peptide> &peptides,
 }
 
 void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
-    bool noContext, bool print_extra_results) {
+    bool noContext, bool print_extra_results, bool print_headerRow) {
     int bestInd, n_NA;
     const vector<double> *score_perAllele_pt;
     // A pointer to the scores, for easier reuse below.
-    outStream << "Peptide\tContext\tBestAllele\t%Rank_best\tCore_best\tCoreP1_best\tSubSpec_best";
 
-    for (auto cAllele : pars::alleles) {
-        outStream << "\t%Rank_" << cAllele << "\tCoreP1_" << cAllele
-                 << "\tSubSpec_" << cAllele;
-    }
     n_NA = 5 + 3 * pars::alleles.size();
     // Tells number of NA values to use for peptides that couldn't be scored.
 
-    if (print_extra_results) {
+    if (print_headerRow){
+        outStream << "Peptide\tContext\tBestAllele\t%Rank_best\tCore_best\tCoreP1_best\tSubSpec_best";
+
         for (auto cAllele : pars::alleles) {
-            outStream << "\tScore_" << cAllele << "\t%RankPWM_" << cAllele
-                << "\tScorePWM_" << cAllele;
+            outStream << "\t%Rank_" << cAllele << "\tCoreP1_" << cAllele
+                    << "\tSubSpec_" << cAllele;
         }
-        /* When this info is asked we add it after the usual columns so that
-            a script that would be based on column indices would still work. */
-        n_NA += 3 * pars::alleles.size();
+
+        if (print_extra_results) {
+            for (auto cAllele : pars::alleles) {
+                outStream << "\tScore_" << cAllele << "\t%RankPWM_" << cAllele
+                    << "\tScorePWM_" << cAllele;
+            }
+            /* When this info is asked we add it after the usual columns so that
+                a script that would be based on column indices would still work. */
+            n_NA += 3 * pars::alleles.size();
+        }
+        outStream << endl;
     }
-    outStream << endl;
 
     for (auto cPep : Peptides) {
         outStream << cPep.getSequence() << "\t";

@@ -179,6 +179,53 @@ void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
     }
 }
 
+vector<string> nnets_def_files(string &nnetsFolder, string nnetsDefRoot,
+                               string execFolder) {
+    string cStr;
+    vector<string> nnetsDefFiles;
+    ifstream nnetsDef;
+    if (nnetsFolder == "default") {
+        nnetsFolder = execFolder + "/nnetsDef/";
+    } else if (nnetsFolder.substr(0, 5) == "exec:") {
+        nnetsFolder = execFolder + "/" + nnetsFolder.substr(5) + "/";
+    } else {
+        nnetsFolder += "/";
+        // Make sure path ends with a '/'.
+    }
+    for (size_t c_nnet(1); c_nnet <= pars::n_nnets; c_nnet++) {
+        nnetsDefFiles.push_back(nnetsFolder + nnetsDefRoot + "_" +
+                                to_string(c_nnet) + ".txt");
+        nnetsDef.open(nnetsDefFiles.back());
+        if (nnetsDef.fail()){
+            throw(string("Couldn't open the nnets definition: \n") + nnetsDefFiles.back());
+        }
+        if (!pars::ignore_version){
+            nnetsDef >> cStr;
+            if (cStr == "Version"){
+                nnetsDef >> cStr; // cStr corresponds now to version name.
+            } else {
+                /* Previous nnets definition files didn't contain the version
+                    information and corresponded to v 2.0.2. */
+                cStr = "2.0.2";
+            }
+            if (pars::version == "Undefined"){
+                pars::version = cStr;
+                // Version hadn't yet been defined.
+            } else if (pars::version != cStr){
+                // Version was already defined but doesn't match current file.
+                throw(string("Running MixMHC2pred v" + pars::version +
+                    " but nnets definition file '" +
+                    nnetsDefFiles.back() + "' is version " + cStr +
+                    ".\nPlease make sure all nnets definition files are " +
+                    "updated simultaneously."));
+            }
+        }
+        nnetsDef.close();
+    }
+    return (nnetsDefFiles);
+}
+
+
 void get_nnets_def(string nnetsDefFile, vector<double> &PWM_range,
     vector<int> &pepL_range, vector<int> &P1_range, double &log_min,
     vector<string> &nn_in_var, vector<vector<vector<double>>> &nnetsWeights,
@@ -200,11 +247,16 @@ void get_nnets_def(string nnetsDefFile, vector<double> &PWM_range,
     PWM_range.resize(2);
     pepL_range.resize(2);
     P1_range.resize(2);
-    nnetsDef >> cStr >> PWM_range[0] >> PWM_range[1];
-    if (cStr != "PWM_range") {
-        throw(string("Expecting 'PWM_range' in the nnetsDefFile ") +
-              nnetsDefFile + " but read '" + cStr + "'.");
+    nnetsDef >> cStr;
+    while (cStr != "PWM_range") {
+        nnetsDef >> cStr;
+        // Possibly remove some first lines defining the version of the nnetsDef.
     }
+    nnetsDef >> PWM_range[0] >> PWM_range[1];
+    // if (cStr != "PWM_range") {
+    //     throw(string("Expecting 'PWM_range' in the nnetsDefFile ") +
+    //           nnetsDefFile + " but read '" + cStr + "'.");
+    // }
     nnetsDef >> cStr >> pepL_range[0] >> pepL_range[1]
         >> cStr >> P1_range[0] >> P1_range[1]
         >> cStr >> log_min >> cStr >> nVal_1;

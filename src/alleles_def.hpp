@@ -30,6 +30,12 @@ void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
     vector<map<int, map<int, double>>> &c_w_ks,
     int &pepL_min_def, int &pepL_max_def, int &CS_upper_def, int &L_core);
 
+vector<string> nnets_def_files(string &nnetsFolder, string nnetsDefRoot,
+    string execFolder);
+/* To return the full path where the nnets definition files are defined. It'll
+    also check if the version is defined in these files (defining pars::version
+    with it) and verifying that all files have the same version. */
+
 void get_nnets_def(string nnetsDefFile, vector<double> &PWM_range,
     vector<int> &pepL_range, vector<int> &P1_range, double &log_min,
     vector<string> &nn_in_var, vector<vector<vector<double>>> &nnetsWeights,

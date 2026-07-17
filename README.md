@@ -17,11 +17,11 @@ MixMHC2pred is also available as a web application:
 
 ## Installation
 
-1) Download MixMHC2pred-2.0.zip file
+1) Download MixMHC2pred-2.1.zip file
   (<https://github.com/GfellerLab/MixMHC2pred/releases>) and move it to a
   directory of your choice, where you have writing permissions.
 
-2) Unzip MixMHC2pred-2.0.zip in this directory.
+2) Unzip MixMHC2pred-2.1.zip in this directory.
 
 3) Above's zip file already contains the human alleles' definition files. If you
    want to do predictions for MHC-II alleles from other species or if you cloned
@@ -34,7 +34,7 @@ MixMHC2pred is also available as a web application:
    definition files into the folder *PWMdef* at the root of the directory where
    MixMHC2pred is installed, to avoid using the `-f` option.
 
-4) To test your installation, make sure you are in *MixMHC2pred-2.0* directory
+4) To test your installation, make sure you are in *MixMHC2pred-2.1* directory
    and run the following command, depending on your operating system:
 
    * Mac OS:   `./MixMHC2pred -i test/testData.txt -o test/out.txt -a DRB1_15_01 DRB5_01_01 DPA1_02_01__DPB1_01_01 DQA1_01_02__DQB1_05_01 DQA1_01_02__DQB1_06_02`
@@ -157,6 +157,14 @@ MixMHC2pred without this option). The new columns give:
     bigger scores are better without having an upper limit. The corresponding
     *%RankPWM_...* are percentiles computed separately per peptide length.
 
+* `--batch_size 1000000`:
+To avoid excessive memory usage the scores of peptides are computed in batches
+of this size (note that in the general case, the number of input peptides will
+likely be lower than this number and everything will be processed in a single
+batch). We can change this *batch_size* value depending on the characteristics
+of the machine running MixMHC2pred to use less (or more) memory (smaller batches
+will use less memory but results will take slightly longer).
+
 ### Results returned and additional information
 
 * MixMHC2pred is meant for scoring different peptides and prioritising
@@ -228,7 +236,7 @@ MixMHC2pred can be used freely by academic groups for non-commercial purposes
 (see license). The product is provided free of charge, and, therefore, on an
 "as is" basis, without warranty of any kind.
 
-**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 2.0) or any data
+**FOR-PROFIT USERS**: If you plan to use MixMHC2pred (version 2.1) or any data
 provided with the script in any for-profit application, you are required to
 obtain a separate license. To do so, please contact Nadette Bulgin
 (<nbulgin@lcr.org>) at the Ludwig Institute for Cancer Research Ltd.

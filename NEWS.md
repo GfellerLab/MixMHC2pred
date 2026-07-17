@@ -1,5 +1,11 @@
 # Release notes from MixMHC2pred
 
+## Version 2.1-beta1 (15.07.2026)
+
+* Beta version of v2.1 corresponding to a retrained model based on expanded
+  HLA-II peptidomics data including new cell lines processed as well as
+  additional curated public data.
+
 ## Version 2.0.2 (08.12.2022)
 
 * Definition files of the alleles are not tracked on github anymore but can
