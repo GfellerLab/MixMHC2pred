@@ -114,9 +114,10 @@ void pepData_import(string pepFile, vector<Peptide> &peptides,
 void comp_pepScores(vector<Peptide> &peptides,
                     int ws_scoring, bool needAllAlleles,
                     string rpepFolder, set<int> &pepL_used,
+                    const map<string, string> &allelesMap,
                     const vector<string> &allelesDefFolders);
 /* This is the main function called to compute the scores of the peptides.
-    This scores are directly updated in the 'peptides'. */
+    These scores are directly updated in the 'peptides'. */
 
 void printPepResults(ofstream &outStream, const vector<Peptide> &Peptides,
     bool noContext, bool print_extra_results, bool print_headerRow);

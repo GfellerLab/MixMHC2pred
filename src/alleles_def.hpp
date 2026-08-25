@@ -9,21 +9,33 @@
 #include <set>
 #include <string>
 #include <map>
+#include <utility>
 #include <iostream>
 #include <fstream>
 #include <numeric>
 #include <cmath>
 #include <algorithm>
 #include <climits>
+#include "helper_general.hpp"
 using namespace std;
 
-string allele_def_file(string cAllele, const vector<string> &allelesDefFolders);
-/* It'll return the full path to the file where the allele is defined searching
-    for the allele in the different allelesDefFolders (using first match when
-    the allele is defined in multiple folders). It returns "" when the allele
-    isn't found in these folders. */
 
-void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
+map<string, string> alleles_def_map(const vector<string> &allelesDefFolders,
+    const vector<string> &alleles);
+/* It'll return a map between allele names and the full path to the file to use
+    for the definition of this allele (could correspond to the same allele name
+    or the name of another allele with identical binding site sequence);
+    Note that it'll be an error if a same allele name is defined multiple times
+    (which could happen e.g. in different allelesDefFolders or if same name is
+    present multiple times in the alleles_map file).
+*/
+
+string allele_def_file(string cAllele, const map<string, string> &allelesMap, const vector<string> &allelesDefFolders);
+/* It'll return the full path to the file where the given allele is defined.
+    It returns "" when the allele isn't found in these folders. */
+
+void get_allele_def(string cAllele, const map<string, string> &allelesMap,
+    const vector<string> &allelesDefFolders,
     const map<char, int> &aa_to_ind, int &c_n_specif,
     vector<vector<vector<double>>> &c_PWM, vector<double> &c_w_k,
     vector<int> &c_spec_id, map<int, double> &c_alpha,

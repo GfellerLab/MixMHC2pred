@@ -46,3 +46,23 @@ std::istream& safeGetline(std::istream& is, std::string& t)
         }
     }
 }
+
+vector<string> list_matching_files(const string& folder, const string& pattern) {
+    vector<string> matching_files;
+    regex regex_pattern(pattern);
+
+    try {
+        for (const auto& entry : filesystem::directory_iterator(folder)) {
+            if (entry.is_regular_file()) {
+                const string filename = entry.path().filename().string();
+                if (regex_match(filename, regex_pattern)) {
+                    matching_files.push_back(filename);
+                }
+            }
+        }
+    } catch (const exception& e) {
+        cerr << "Error accessing folder: " << e.what() << endl;
+    }
+
+    return matching_files;
+}

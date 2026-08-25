@@ -1,5 +1,5 @@
 ####################
-# Output from MixMHC2pred (vpan_v29)
+# Output from MixMHC2pred (v2.1-beta1)
 # Input file: test/testData.txt
 # Alleles: DRB1_15_01, DRB5_01_01, DPA1_02_01__DPB1_01_01, DQA1_01_02__DQB1_05_01, DQA1_01_02__DQB1_06_02
 # Alleles folder: 'exec:/PWMdef/'; 

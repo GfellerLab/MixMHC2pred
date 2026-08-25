@@ -6,23 +6,121 @@
 #include "helper_MixMHC2pred.hpp"
 
 
-string allele_def_file(string cAllele, const vector<string> &allelesDefFolders){
-    int i(0);
-    string cFile;
-    while(i < allelesDefFolders.size()){
-        cFile = allelesDefFolders[i] + cAllele + ".txt";
-        ifstream alleleFile(cFile);
-        if (alleleFile.is_open()){
-            return(cFile);
-        } else {
-            i++;
+map<string, string> alleles_def_map(const vector<string> &allelesDefFolders,
+    const vector<string> &alleles) {
+    map<string, string> cmap;
+    string cFolder;
+
+    /* Internal function to check if the allele is part of the requested
+        input allele, check if it is already present in cmap,
+        and add it if needed. */
+    auto check_and_insert = [&cmap, &alleles](string alleleName, string alleleMap,
+        const string& cFolder) {
+        alleleMap = cFolder + alleleMap + ".txt";
+        for (int i(0); i <2; i++){
+            if (i == 1){
+                /* We determine if first letters of alleleName are 'HLA-' to
+                    also allow having the names without HLA- part (i.e., to
+                    allow giving the allele as HLA-DRB1*01:01, DRB1*01:01 or
+                    DRB1_01_01). */
+                if (alleleName.substr(0, 4) == "HLA-"){
+                    alleleName = (alleleName.substr(4));
+                } else {
+                    break;
+                    /* alleleName didn't start with 'HLA-', no need to reinsert
+                        the same value as 2nd time. */
+                }
+            }
+            
+            if (find(alleles.begin(), alleles.end(), alleleName) != alleles.end()){
+                /* Check if the given alleleName was part of the user-input alleles. */
+                if ((cmap.find(alleleName) != cmap.end()) &&
+                (cmap[alleleName] != alleleMap)) {
+                    /* 2nd check is in case current alleleName was defined multiple
+                    times pointing to the same file, we don't want to throw an error.
+                    (This could be the case if the 2 allele columns were identical for
+                    example for user-defined PWM files). */
+                    throw(string("The allele '") + alleleName +
+                    "' is defined multiple times in the alleles mapping files.");
+                }
+                cmap[alleleName] = alleleMap;
+            }
+        }        
+    };
+
+    /* We loop over the folders, reading the Alleles_map files found in these
+        to determine the mapping between allele names. */
+    for (int i(0); i < allelesDefFolders.size(); i++){
+        cFolder = allelesDefFolders[i];
+        vector<string> mapFiles = list_matching_files(cFolder, R"(Alleles_map.*\.txt)");
+        // Search for files Alleles_map.....txt in the folder.
+        if (mapFiles.size() == 0){
+            throw(string("Couldn't find any Alleles_map file in the folder '") + cFolder + "'. Please make sure  to have at least one such file per folder containing the allele definitions files.");
+        }
+
+        for (const auto& cMapFile : mapFiles){
+            ifstream allelesMapFile(cFolder + cMapFile);
+            if (!allelesMapFile.is_open()){
+                throw(string("Couldn't open the alleles mapping file '") +
+                    cFolder + cMapFile + "'.");
+            }
+            string trash, alleleName1, alleleName2, alleleMap;
+            while (allelesMapFile.peek() == '#'){
+                safeGetline(allelesMapFile, trash);
+                // Removing first comment lines
+            }
+            allelesMapFile >> alleleName1 >> alleleName2 >> alleleMap;
+            /* We have two columns of allele names in the file, the first
+                        one containing "official names" (i.e., IMGT-HLA format),
+                        and the 2nd column with the name in my format with
+                        underscores, etc. */
+            if (alleleName1 != "OfficialName" || alleleName2 != "AlleleName" || alleleMap != "mapName"){
+                throw(string("The alleles mapping file '") + cFolder + cMapFile +
+                    "' doesn't have the expected header line (OfficialName, AlleleName, Allele_map, followed by additional columns).");
+            }
+            safeGetline(allelesMapFile, trash);
+
+            while (allelesMapFile.good()){
+                allelesMapFile >> alleleName1 >> alleleName2 >> alleleMap;
+                safeGetline(allelesMapFile, trash);
+                // Remove additional columns not used.
+
+                if (!allelesMapFile.eof()){
+                    /* We do this check here because if the last line was empty
+                        the 'while' above still went in but it then didn't
+                        get new values in alleleName1, etc.
+                    */
+                   check_and_insert(alleleName1, alleleMap, cFolder);
+                   check_and_insert(alleleName2, alleleMap, cFolder);
+                }
+            }
         }
     }
-    // Didn't find the allele, otherwise the function would have returned.
-    return ("");
+    return cmap;
 }
 
-void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
+
+string allele_def_file(string cAllele, const map<string, string> &allelesMap, const vector<string> &allelesDefFolders) {
+
+    map<string, string>::const_iterator it(allelesMap.find(cAllele));
+    string cFile("");
+    // Empty string used in case allele not found in the data.
+    if (it != allelesMap.end()) {
+        // Allele found in the map, return the corresponding file path.
+        cFile = it->second;
+        ifstream alleleFile(cFile);
+        if (!alleleFile.is_open()) {
+            cerr << "Warning: couldn't find the definition file '" << cFile << endl << " needed for allele '" << cAllele << "'." << endl;
+            cFile = "";
+            // Reset to empty string if the file cannot be opened (because file
+            // didn't exist for example).
+        }
+    }
+    return (cFile);
+}
+
+void get_allele_def(string cAllele, const map<string, string> &allelesMap,
+    const vector<string> &allelesDefFolders,
     const map<char, int> &aa_to_ind, int &c_n_specif,
     vector<vector<vector<double>>> &c_PWM, vector<double> &c_w_k,
     vector<int> &c_spec_id, map<int, double> &c_alpha,
@@ -32,7 +130,8 @@ void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
     vector< map<int, map<int, double>>> w_s;
     bool CS_perL;
     int x;
-    string cAlleleFile(allele_def_file(cAllele, allelesDefFolders)), trash;
+    string cAlleleFile(allele_def_file(cAllele, allelesMap, allelesDefFolders)),
+        trash;
     ifstream alleleFile(cAlleleFile);
     char cAA;
     vector< int > x_vect;
@@ -93,7 +192,7 @@ void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
         vector<vector<double>>(L_core, vector<double>(pars::n_aa, 0.0)));
     for (int j(0); j < c_n_specif; j++) {
         alleleFile >> trash;
-        getline(alleleFile, trash); // PWM 'header'
+        safeGetline(alleleFile, trash); // PWM 'header'
         for (int k(0); k < pars::n_aa; k++) {
             alleleFile >> cAA; // The name of the aa
             for (int l(0); l < L_core; l++) {
@@ -108,7 +207,7 @@ void get_allele_def(string cAllele, const vector<string> &allelesDefFolders,
     w_s.assign(c_n_specif, map<int, map<int, double>>());
     if (CS_perL) { // CS depend on the peptide sizes
         alleleFile >> trash;
-        getline(alleleFile, trash); // just 'header' defining these.
+        safeGetline(alleleFile, trash); // just 'header' defining these.
         pepL_min_def = INT_MAX;
         pepL_max_def = 0;
         while (!alleleFile.eof()) {
@@ -202,11 +301,10 @@ vector<string> nnets_def_files(string &nnetsFolder, string nnetsDefRoot,
         if (!pars::ignore_version){
             nnetsDef >> cStr;
             if (cStr == "Version"){
-                nnetsDef >> cStr; // cStr corresponds now to version name.
+                nnetsDef >> cStr; // cStr corresponds to version name.
             } else {
-                /* Previous nnets definition files didn't contain the version
-                    information and corresponded to v 2.0.2. */
-                cStr = "2.0.2";
+                throw(string("Expecting 'Version' in the nnetsDefFile ") +
+                      nnetsDefFiles.back() + " but read '" + cStr + "'.");
             }
             if (pars::version == "Undefined"){
                 pars::version = cStr;

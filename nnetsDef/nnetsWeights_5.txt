@@ -1,4 +1,4 @@
-Version pan_v29
+Version v2.1-beta1
 PWM_range 0 100
 pepL_range 9 25
 P1_range -8 8

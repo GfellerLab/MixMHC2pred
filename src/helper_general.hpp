@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <filesystem>
+#include <regex>
 
 using namespace std;
 
@@ -37,5 +39,9 @@ template< class T> bool find_index(const vector<T> &v, const T &x, int &index)
 		return false;
 	}
 }
+
+vector<string> list_matching_files(const string& folder, const string& pattern);
+/* Function listing the filenames of the files matching the
+	regular expression 'pattern', in the given 'folder'. */
 
 #endif /* helper_general_h */

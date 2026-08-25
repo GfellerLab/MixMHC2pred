@@ -115,7 +115,7 @@ int main(int argc, const char *argv[]) {
         
         cur_time = chrono::system_clock::to_time_t(chrono::system_clock::now());
         std::cout << "[" << put_time(localtime(&cur_time), "%Y-%m-%d %H:%M:%S")
-			<< "] Runing MixMHC2pred (v" << pars::version
+			<< "] Runing MixMHC2pred (" << pars::version
              << ") for peptide file: " << pepFile << endl;
 
         vector<Peptide> peptides_full, peptides;
@@ -133,6 +133,10 @@ int main(int argc, const char *argv[]) {
                 // Make sure path ends with a '/'.
             }
         }
+
+        map<string, string> allelesMap(alleles_def_map(allelesDefFolders, 
+            alleles));
+        // Getting the mapping of allele names to allele definition files.
 
         rPepFolder = execFolder + "/rpep/";
         // Loading the peptides and computing their scores.
@@ -175,7 +179,7 @@ int main(int argc, const char *argv[]) {
                 with the nnets, I always force this to true.
                 */
             comp_pepScores(peptides, ws_scoring, needAllAlleles, rPepFolder,
-                        pepL_used, allelesDefFolders);
+                        pepL_used, allelesMap, allelesDefFolders);
             cur_time = chrono::system_clock::to_time_t(chrono::system_clock::now());
             std::cout << "[" << put_time(localtime(&cur_time), "%Y-%m-%d %H:%M:%S")
                 << "] Computing now the full scores from each peptide." << endl;
@@ -188,7 +192,7 @@ int main(int argc, const char *argv[]) {
 
             if (cBatch == 0){
                 // Making first the header from the results file
-                outStream << string(20, '#') << "\n# Output from MixMHC2pred (v"
+                outStream << string(20, '#') << "\n# Output from MixMHC2pred ("
                     << pars::version << ")" << endl
                         << "# Input file: " << pepFile << endl
                         << "# Alleles: ";

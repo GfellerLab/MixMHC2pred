@@ -95,15 +95,15 @@ same order than in the input file.
 List of MHC-II alleles to test. If you want to make predictions with multiple
 alleles, list the different alleles separated by a space (e.g.
 `-a DRB1_11_01 DRB3_02_02`).  
-Use the nomenclature *DRB1_03_01* for HLA-DRB1\*03:01 and
-*DPA1_01_03__DPB1_04_01* for HLA-DPA1\*01:03-DPB1\*04:01. The
-list of alleles available and corresponding nomenclature is given in
+You can use any of the following nomenclatures:
+  + *DRB1_11_01*, *DRB1\*11:01* or *HLA-DRB1\*11:01* for HLA-DRB1\*11:01 and
+  + *DPA1_01_03__DPB1_04_01*, *DPA1\*01:03/DPB1\*04:01* or *HLA-DPA1\*01:03/DPB1\*04:01* for HLA-DPA1\*01:03-DPB1\*04:01.
+
+The list of alleles available and corresponding nomenclature is given in
 <http://mixmhc2pred.gfellerlab.org/PWMdef> (also given in the files
-*Alleles_list_xxx.txt* in the corresponding *PWMdef* folders). Simply, the names
-used in MixMHC2pred are obtained by dropping the *HLA-* from human alleles, by
-replacing all "-", "*" and ":" by "_", and by placing "__" between the alpha and
-beta chains forming the heterodimer (the invariant DR-alpha chains are not
-indicated in the allele names as in standard practice).
+*Alleles_list_xxx.txt* in the corresponding *PWMdef* folders)
+(Note that the invariant HLA-DRA chains are not indicated in the allele names
+as in standard practice).
 
 ### Optional arguments
 
@@ -130,8 +130,8 @@ given in *test/out_noContext_compare.txt*.
 If the folder containing the PWM definition files of the alleles is not at its
 default location ("path_to_exec/PWMdef"), you can give this option indicating
 where these files are located. It is possible to list multiple folders, separated
-by a space (when an allele is found in multiple folders, the first definition
-found for this allele is used). This path can be given as a full path, a path relative
+by a space (it throws an error if an allele is found in multiple folders).
+This path can be given as a full path, a path relative
 to current location, or with the special keyword *exec:* (e.g., `-f exec:PWMdef`)
 to give the path relative to the root folder of MixMHC2pred executable. An other
 special keyword *default* can also be used: it represents the default path where
@@ -208,15 +208,18 @@ will use less memory but results will take slightly longer).
   value *2*. For alleles accomodating reverse binding, a value of *-1* indicates
   that the given peptide is bound in the reverse orientation.
 
-* Peptides shorter than 12 amino acids, longer than 21 amino acids or
+* Peptides shorter than 9 amino acids, longer than 25 amino acids or
   containing non-standard amino acids are kept but with a score of "NA".
   
 * The list of alleles available is provided in
   <http://mixmhc2pred.gfellerlab.org/PWMdef> (also given in the files
-  *Alleles_list_xxx.txt* in the corresponding *PWMdef* folders). These files
-  show the nomenclature to use when running MixMHC2pred and the standard
-  nomenclature used for example in the [IPD-IMGT/HLA database](
-    https://www.ebi.ac.uk/ipd/mhc/).
+  *Alleles_map_xxx.txt* in the corresponding *PWMdef* folders). The 2 first
+  columns of these files show the allele names in two different nomenclatures
+  (both nomenclatures can be used for predictions). The last column of these
+  files tells the binding site sequence similarity of the given allele towards
+  the most similar allele with available training data. A value of 1 means
+  perfect similarity, while lower values indicate more distant alleles, with
+  values above 0.8-0.9 estimated to yield accurate predictions.
 
 ## Latest version
 

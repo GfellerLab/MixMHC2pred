@@ -164,6 +164,7 @@ void pepData_import(string pepFile, vector<Peptide> &peptides,
 void comp_pepScores(vector<Peptide> &peptides,
                     int ws_scoring, bool needAllAlleles,
                     string rPepFolder, set<int> &pepL_used,
+                    const map<string, string> &allelesMap,
                     const vector<string> &allelesDefFolders) {
     string tString;
     vector<string> alleles(pars::alleles), allelesMissing, predDefFiles;
@@ -187,7 +188,7 @@ void comp_pepScores(vector<Peptide> &peptides,
 
     // Check first if there are some missing alleles
     for (unsigned int i(0); i < alleles.size();) {
-        if (allele_def_file(alleles[i], allelesDefFolders) != "") {
+        if (allele_def_file(alleles[i], allelesMap, allelesDefFolders) != "") {
             i++;
         } else {
             allelesMissing.push_back(alleles[i]);
@@ -199,16 +200,16 @@ void comp_pepScores(vector<Peptide> &peptides,
         tString = allelesMissing[0];
         for (unsigned int i(1); i < allelesMissing.size(); i++)
             tString += ", " + allelesMissing[i];
-        string alleles_def_folers_str("");
+        string alleles_def_folders_str("");
         for (string cFolder : allelesDefFolders) {
-            alleles_def_folers_str += "'" + cFolder + "', ";
+            alleles_def_folders_str += "'" + cFolder + "', ";
         }
         if (needAllAlleles || (alleles.size() == 0)){
             throw(string("The allele(s) '") + tString + "' aren't defined in " +
-                alleles_def_folers_str + " cannot perform the computations.");
+                alleles_def_folders_str + " cannot perform the computations.");
         } else {
             cerr << "Warning: The allele(s) '" << tString
-                << "' aren't defined in " <<  alleles_def_folers_str
+                << "' aren't defined in " <<  alleles_def_folders_str
                 << " doing the computation on the remaining alleles." << endl;
         }
     }
@@ -229,7 +230,7 @@ void comp_pepScores(vector<Peptide> &peptides,
         directly.
     */
     for (int i(0); i < nAlleles; i++) {
-        get_allele_def(alleles[i], allelesDefFolders, pars::aa_to_ind,
+        get_allele_def(alleles[i], allelesMap, allelesDefFolders, pars::aa_to_ind,
             n_specif[i], PWM[i], w_k[i], spec_ids[i], alpha[i], w_ks[i],
             c_pepL_min_def, c_pepL_max_def, c_CS_upper_def, c_L_core);
         
